@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 const path = require('path');
 
+//**
 // Middleware для обработки JSON данных
 app.use(express.json());
 

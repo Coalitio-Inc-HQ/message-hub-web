@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Пример чата</title>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Боковая панель с списком чатов -->
+        <div class="sidebar">
+            <ul class="chat-list">
+                <!-- Чаты будут добавляться здесь -->
+            </ul>
+        </div>
+        <!-- Основная область для отображения сообщений -->
+        <div class="main">
+            <div id="name" class="name-display"></div>
+            <ul class="chat">
+                <!-- Сообщения чата будут добавляться здесь -->
+            </ul>
+            <!-- Форма для ввода и отправки сообщений -->
+            <form class="form">
+                <input type="text" id="msg" placeholder="Введите сообщение...">
+                <button type="submit" class="send">Отправить</button>
+            </form>
+        </div>
+    </div>
+    <!-- Подключение скриптов -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

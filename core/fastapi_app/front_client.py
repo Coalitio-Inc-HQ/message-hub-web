@@ -1,5 +1,3 @@
-import asyncio
-
 from starlette.websockets import WebSocket
 
 from core import *
@@ -38,7 +36,7 @@ def get_json_string_of_an_array(list_of_objects: list) -> str:
 
 
 @check_body_format(['user_id'])
-async def send_front_waiting_chats_by_user(body: dict, websocket: WebSocket | None):
+async def answer_front_waiting_chats_by_user(body: dict, websocket: WebSocket | None):
     """
     Ответ на запрос о получении ожидающих чатов от фронта
     :param body: Dict[user_id: int]
@@ -59,7 +57,7 @@ async def send_front_waiting_chats_by_user(body: dict, websocket: WebSocket | No
 
 
 @check_body_format(['user_id'])
-async def send_front_chats_by_user(body: dict, websocket: WebSocket | None):
+async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None):
     """
     Ответ на запрос о получении чатов пользователя от фронта.
 
@@ -79,8 +77,3 @@ async def send_front_chats_by_user(body: dict, websocket: WebSocket | None):
     await websocket.send_json(
         ActionDTO(name="get_chats_by_user", body={"chats": get_json_string_of_an_array(chats)}).model_dump()
     )
-
-
-if __name__ == "__main__":
-    pass
-    # asyncio.run(send_waiting_chats_to_front({"chats": 1}, None))

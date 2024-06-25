@@ -4,11 +4,15 @@ from starlette.websockets import WebSocketDisconnect, WebSocket
 
 from pydantic import parse_obj_as
 
-from core.fastapi_app.front_client import send_front_waiting_chats_by_user
+from core.fastapi_app.front_client import answer_front_waiting_chats_by_user, answer_front_chats_by_user
+from core.fastapi_app.main_client import router
 
 from core import *
 
-actions_map = ActionsMapTypedDict(get_waiting_chats=send_front_waiting_chats_by_user)
+actions_map = ActionsMapTypedDict(
+    get_waiting_chats=answer_front_waiting_chats_by_user,
+    get_chats_by_user=answer_front_chats_by_user
+)
 
 
 @asynccontextmanager
@@ -17,7 +21,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
+app.include_router(router)
 
 @app.websocket(f"{app_config.WS_LISTENER_URL}")
 async def websocket_endpoint(websocket: WebSocket):  # в будущем авторизация по токену

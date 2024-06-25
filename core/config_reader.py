@@ -16,13 +16,9 @@ class Settings(BaseSettings):
         return f"{self.DB_TYPE}+{self.DB_DRIVER}:///./{self.DB_NAME}"
 
     BASE_DOMAIN: str
+    ROUTER_PREFIX: str
     WS_LISTENER_URL: str
-    WS_CHATS_ACTION: str
-    WS_WAITING_ACTION: str
-    WS_READ_ACTION: str
-    WS_MESSAGES_ACTION: str
-    WS_SEND_ACTION: str
-    WS_GET_ACTION: str
+    COPPER_MAIN_URL: str
 
     @property
     def WS_WAITING_CHATS_ACTION_NAME(self) -> str:

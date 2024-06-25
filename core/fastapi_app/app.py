@@ -37,7 +37,7 @@ async def websocket_endpoint(websocket: WebSocket):  # в будущем авт�
             action = parse_obj_as(ActionDTO, data)
             if actions_map.__contains__(action.name):
                 await actions_map[action.name](action.body, websocket)
-            return
+
     except WebSocketDisconnect:
         websocket_manager.disconnect(websocket)
 

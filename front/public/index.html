@@ -11,8 +11,13 @@
     <div class="wrapper">
         <!-- Боковая панель с списком чатов -->
         <div class="sidebar">
-            <ul class="chat-list">
-                <!-- Чаты будут добавляться здесь -->
+            <h2>Ожидающие</h2>
+            <ul class="chat-list waiting-chats">
+                <!-- Ожидающие чаты будут добавляться здесь -->
+            </ul>
+            <h2>Прочитанные</h2>
+            <ul class="chat-list read-chats">
+                <!-- Прочитанные чаты будут добавляться здесь -->
             </ul>
         </div>
         <!-- Основная область для отображения сообщений -->
@@ -23,9 +28,10 @@
             </ul>
             <!-- Форма для ввода и отправки сообщений -->
             <form class="form">
-                <input type="text" id="msg" placeholder="Введите сообщение...">
+                <textarea id="msg" placeholder="Введите сообщение..."></textarea>
                 <button type="submit" class="send">Отправить</button>
-            </form>
+            </form>            
+            
         </div>
     </div>
     <!-- Подключение скриптов -->

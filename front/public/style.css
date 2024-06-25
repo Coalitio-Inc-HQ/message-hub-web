@@ -12,6 +12,12 @@ body, html {
   background: #222;
 }
 
+.body {
+  white-space: pre-wrap; /* Сохраняет пробелы и переносы строк */
+  word-wrap: break-word; /* Переносит длинные слова */
+  
+}
+
 .wrapper {
   display: flex;
   height: 100vh;
@@ -32,6 +38,18 @@ body, html {
   height: 100%;
 }
 
+.name {
+
+  font-weight: bold; /* Полужирный шрифт */
+  font-size: 15px; /* Размер шрифта */
+  color: #222; /* Контрастный цвет текста */
+  margin-bottom: 5px; /* Отступ снизу для разделения с текстом сообщения */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Тень текста */
+
+}
+
+
+
 .chat {
   list-style: none;
   padding: 20px;
@@ -44,14 +62,15 @@ body, html {
   padding: 10px;
   margin-bottom: 10px;
   border-radius: 10px;
-}
+  word-wrap: break-word; /* Позволяет переносить слова на новую строку */
 
+}
 
 .form {
   display: flex;
   align-items: center;
   background: #3e3e3e;
-  border-radius: 100px;
+  border-radius: 20px;
   gap: 10px;
   height: 60px;
   padding: 10px;
@@ -59,8 +78,7 @@ body, html {
   margin-right: 10px;
   transform: translateY(-20px); /* Приподнять на 10px */
 }
-
-
+/* 
 .form input {
   flex: 1;
   height: 100%;
@@ -70,6 +88,24 @@ body, html {
   outline: none;
   padding-left: 20px;
   color: white;
+} */
+
+textarea{  
+  resize:none;
+  border:none;
+  display:block;
+  flex: 1;
+  height: 100%;
+  gap: 30px;
+  border-radius: 10px;
+  border: none;
+  background: #333;
+  outline: none;
+  padding-top: 10px;
+  padding-left: 15px;
+ 
+  color: white;
+  font-family: ui-sans-serif, -apple-system, system-ui, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, Helvetica, Apple Color Emoji, Arial, Segoe UI Emoji, Segoe UI Symbol;
 }
 
 
@@ -77,32 +113,38 @@ body, html {
   display: flex;
   justify-content: center; /* Выравнивание по горизонтали */
   align-items: center; /* Выравнивание по вертикали */
+  width: 120px; /* Фиксированная ширина */
+  height: 40px; /* Фиксированная высота */
   border-radius: 100px;
   background-color: #1e1e1e;
   border: none;
   color: #FFFFFF;
   text-align: center;
-  font-size: 20px;
-  padding: 10px;
-  transition: all 0.5s;
+  font-size: 16px; /* Размер шрифта */
+  padding: 0; /* Убираем внутренние отступы */
   cursor: pointer;
   outline: none;
+  margin-left: 10px; /* Отступ слева */
+  position: relative; /* Относительное позиционирование для анимации */
+  transition: all 0.5s;
 }
 
 .form .send:hover {
-  background-color: #3e3e3e;
-  padding-right: 25px;
+  background-color: #302f2f;
+  padding-right: 25px; /* Добавляем отступ для анимации */
 }
 
 .form .send::after {
   content: '>';
+  position: absolute;
+  right: 5px; /* Начальная позиция стрелки */
   opacity: 0;
   transition: 0.5s;
 }
 
 .form .send:hover::after {
   opacity: 1;
-  right: 0;
+  right: 10px; /* Конечная позиция стрелки */
 }
 
 .chat-list {
@@ -128,6 +170,13 @@ body, html {
   background-color: #555;
 }
 
+h2 {
+  color: white;
+  margin-bottom: 10px;
+}
 
-
-
+.chat-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 20px;
+}

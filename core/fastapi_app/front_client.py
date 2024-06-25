@@ -7,11 +7,15 @@ from core import *
 
 class TestData:
     def __init__(self):
-        self.test_chats = [
+        self.test_waiting_chats = [
             ChatDTO(id=1, name="1"),
             ChatDTO(id=2, name="2"),
             ChatDTO(id=3, name="3"),
             ChatDTO(id=4, name="4")
+        ]
+        self.test_user_chats = [
+            ChatDTO(id=55, name="fff"),
+            ChatDTO(id=6, name="fgsdfg")
         ]
 
 
@@ -44,35 +48,39 @@ async def send_front_waiting_chats_by_user(body: dict, websocket: WebSocket | No
     user_id = body.get('user_id')  # Получаем user_id от фронта
     chats = ChatDTO  # Получаем ChatDTO с главного сервера, который мы потом отправим во фронт
 
-    ...  # здесь логика общения с copper main
+    ...  # здесь логика общения с copper main, получаем ОЖИДАЮЩИЕ ЧАТЫ
 
     "Ниже код для тестирования"
-    chats = TestData().test_chats
+    chats = TestData().test_waiting_chats
 
     await websocket.send_json(
         ActionDTO(name="get_waiting_chats", body={"chats": get_json_string_of_an_array(chats)}).model_dump()
     )
 
 
-@check_body_format(keys=['chats'])
-async def send_waiting_chats_to_front(body: dict, websocket: WebSocket | None):
+@check_body_format(['user_id'])
+async def send_front_chats_by_user(body: dict, websocket: WebSocket | None):
     """
-    :param body: Dict[chats: ChatDTO]
-    :param websocket: WebSocket
+    Ответ на запрос о получении чатов пользователя от фронта.
+
+    "TODO: убери дублирование кода, связанное со схожестью первых двух методов"
+    :param body: Dict[]
+    :param websocket:
     :return:
     """
-    try:
-        chats = body.get('chats')
-        # await websocket.send_json(ActionDTO(name="get_waiting_chats", body={"chats": chats}))
-        ...
-    except Exception as e:
-        print(e)
+    user_id = body.get('user_id')  # Получаем user_id от фронта
+    chats = ChatDTO  # Получаем ChatDTO с главного сервера, который мы потом отправим во фронт
 
+    ...  # здесь логика общения с copper main, получаем ОЖИДАЮЩИЕ ЧАТЫ
 
-@check_body_format(keys=[''])
-async def send_chats_by_user_to_front(body: dict, websocket: WebSocket | None):
-    ...
+    "Ниже код для тестирования"
+    chats = TestData().test_user_chats
+
+    await websocket.send_json(
+        ActionDTO(name="get_chats_by_user", body={"chats": get_json_string_of_an_array(chats)}).model_dump()
+    )
 
 
 if __name__ == "__main__":
-    asyncio.run(send_waiting_chats_to_front({"chats": 1}, None))
+    pass
+    # asyncio.run(send_waiting_chats_to_front({"chats": 1}, None))

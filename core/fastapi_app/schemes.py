@@ -3,11 +3,11 @@ from typing import Dict, Callable, Any, TypedDict, List
 
 from pydantic import BaseModel
 
-UserId = int
-ChatId = int
-MessageId = int
-Count = int
-ActionName = str
+user_id = int
+chat_id = int
+message_id = int
+count = int
+name = str
 
 
 class ActionDTO(BaseModel):
@@ -17,7 +17,7 @@ class ActionDTO(BaseModel):
 
     Формат: {name: str, {...тело}}
     """
-    name: ActionName
+    name: name
     body: dict
 
 
@@ -25,7 +25,7 @@ class ChatDTO(BaseModel):
     """
     Экземпляр чата, пришедшего с главного сервера
     """
-    id: ChatId
+    id: chat_id
     name: str
 
 
@@ -34,21 +34,21 @@ class MessageDTO(BaseModel):
     Экземпляр сообщения, в данном формате они хранятся
     на главном сервере
     """
-    id: MessageId
-    chat_id: ChatId
-    sender_id: UserId
+    id: message_id
+    chat_id: chat_id
+    sender_id: user_id
     text: str
     date: datetime.datetime | str
 
 
 class UserDTO(BaseModel):
-    id: UserId
+    id: user_id
     name: str
 
 
 class ActionsMapTypedDict(TypedDict):
-    get_waiting_chats: Callable[[UserId], List[ChatDTO]] | None
-    read_chat_by_user: Callable[[UserId, ChatId], ChatDTO] | None
-    get_chats_by_user: Callable[[UserId], List[ChatDTO]] | None
-    get_messages_from_chat: Callable[[ChatId, Count], List[MessageDTO]] | None
+    get_waiting_chats: Callable[[user_id], List[ChatDTO]] | None
+    read_chat_by_user: Callable[[user_id, chat_id], ChatDTO] | None
+    get_chats_by_user: Callable[[user_id], List[ChatDTO]] | None
+    get_messages_from_chat: Callable[[chat_id, count], List[MessageDTO]] | None
     send_message_to_chat: Callable[[MessageDTO], None] | None

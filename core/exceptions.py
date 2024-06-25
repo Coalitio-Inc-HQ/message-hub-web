@@ -1,0 +1,2 @@
+class WrongBodyFormatException(Exception):
+    pass

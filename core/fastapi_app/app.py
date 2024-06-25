@@ -4,11 +4,11 @@ from starlette.websockets import WebSocketDisconnect, WebSocket
 
 from pydantic import parse_obj_as
 
-from core.fastapi_app.front_client import send_front_waiting_chats_by_user
+from core.fastapi_app.front_client import answer_front_waiting_chats_by_user
 
 from core import *
 
-actions_map = ActionsMapTypedDict(get_waiting_chats=send_front_waiting_chats_by_user)
+actions_map = ActionsMapTypedDict(get_waiting_chats=answer_front_waiting_chats_by_user)
 
 
 @asynccontextmanager

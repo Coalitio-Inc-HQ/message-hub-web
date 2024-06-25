@@ -6,60 +6,54 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 const path = require('path');
 
-//**
 // Middleware для обработки JSON данных
 app.use(express.json());
 
 // Словарь для отслеживания активных чатов
-let activeChats = {};
+// Словарь для отслеживания123активных чатов
+let activeChats = {
+    1: { name: 'Alice', messages: [{ name: 'Alice', body: 'Hello!' }], read: false },
+    2: { name: 'Bob', messages: [{ name: 'Bob', body: 'Hi!' }], read: true }
+};
 
-// Маршрут для получения сообщений от Telegram бота
-app.post('/message', (req, res) => {
-    const messageData = req.body;
-    console.log('Получено сообщение от Telegram бота:', messageData);
-
-    // Проверка, существует ли уже этот пользователь в активных чатах
-    if (!activeChats[messageData.user_id]) {
-        activeChats[messageData.user_id] = {
-            name: messageData.full_name,
-            messages: []
-        };
-        // Отправка информации о новом чате через WebSocket
-        io.emit('new_chat', {
-            name: messageData.full_name,
-            chatId: messageData.user_id
-        });
-    }
-
-    // Сохранение сообщения в активных чатах
-    activeChats[messageData.user_id].messages.push({
-        name: messageData.full_name,
-        body: messageData.message_text
-    });
-
-    // Отправка сообщения через WebSocket на HTML страницу
-    io.emit('new_msg', {
-        name: messageData.full_name,
-        body: messageData.message_text,
-        chatId: messageData.user_id
-    });
-
-    res.status(200).send('Сообщение получено');
-});
-
-// Обработчик подключений через WebSocket
 io.on('connection', (socket) => {
     console.log(`Новое подключение: ${socket.id}`);
 
-    // Обработчик для события отправки сообщения от клиента (HTML страницы)
-    socket.on('send_msg', async (data) => {  // Изменение на асинхронную функцию
+    // Обработчик получения ожидающих чатов
+    socket.on('get_waiting_chats', () => {
+        const waitingChats = Object.keys(activeChats).filter(chatId => !activeChats[chatId].read).map(chatId => {
+            return { chatId, name: activeChats[chatId].name };
+        });
+        socket.emit('waiting_chats', waitingChats);
+    });
+
+    // Обработчик получения чатов пользователя
+    socket.on('get_chats_by_user', (username) => {
+        const userChats = Object.keys(activeChats).filter(chatId => activeChats[chatId].name === username).map(chatId => {
+            return { chatId, name: activeChats[chatId].name };
+        });
+        socket.emit('user_chats', userChats);
+    });
+
+    // Обработчик получения сообщений из чата
+    socket.on('get_messages_from_chat', (chatId) => {
+        if (activeChats[chatId]) {
+            socket.emit('chat_messages', activeChats[chatId].messages);
+        } else {
+            socket.emit('chat_messages', []);
+        }
+    });
+
+    // Обработчик отправки сообщения от клиента (HTML страницы)
+    socket.on('send_msg', async (data) => {
         console.log(`Получено сообщение от клиента: ${data.body}`);
 
         // Проверка, существует ли уже этот пользователь в активных чатах
         if (!activeChats[data.chatId]) {
             activeChats[data.chatId] = {
                 name: data.name,
-                messages: []
+                messages: [],
+                read: false
             };
             // Отправка информации о новом чате через WebSocket
             io.emit('new_chat', {
@@ -83,30 +77,6 @@ io.on('connection', (socket) => {
 
         // Динамический импорт node-fetch
         const fetch = (await import('node-fetch')).default;
-
-        // Отправка сообщения в Telegram бот
-        const message = {
-            chatId: data.chatId,
-            text: `Сообщение от ${data.name}: ${data.body}`
-        };
-
-        try {
-            const response = await fetch('http://localhost:8000/send-message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(message)
-            });
-
-            if (response.ok) {
-                console.log('Сообщение успешно отправлено в Telegram');
-            } else {
-                console.error('Ошибка при отправке сообщения в Telegram');
-            }
-        } catch (error) {
-            console.error('Ошибка при отправке запроса:', error);
-        }
     });
 
     // Обработчик отключения клиента

@@ -46,11 +46,12 @@ def check_body_format(keys: list[str]):
 def get_json_string_of_an_array(list_of_objects: list) -> str:
     return f'{[item.model_dump() for item in list_of_objects]}'
 
-
-async def answer_front_waiting_chats_by_user(body: dict, websocket: WebSocket | None):
+@check_body_format(['count'])
+async def answer_front_waiting_chats(body: dict, websocket: WebSocket | None):
     """
     Ответ на запрос о получении ожидающих чатов от фронта
-    :param body: Dict[user_id: int]
+
+    :param body: Dict[count: int]
     :param websocket:
     :return:
     """
@@ -61,9 +62,6 @@ async def answer_front_waiting_chats_by_user(body: dict, websocket: WebSocket | 
         )  # Получаем ChatDTO с главного сервера, который мы потом отправим во фронт
     except ValueError:
         raise WrongBodyFormatException("Неверный формат данных в Body")
-
-    # "Ниже код для тестирования"
-    # chats = TestData().test_waiting_chats
 
     await websocket.send_json(
         ActionDTO(name="get_waiting_chats", body={"chats": get_json_string_of_an_array(chats)}).model_dump()
@@ -82,9 +80,6 @@ async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None):
     """
     user_id = body.get('user_id')  # Получаем user_id от фронта
     chats = await get_chats_by_user(user_id)
-
-    # "Ниже код для тестирования"
-    # chats = TestData().test_user_chats
 
     await websocket.send_json(
         ActionDTO(name="get_chats_by_user", body={"chats": get_json_string_of_an_array(chats)}).model_dump()
@@ -121,11 +116,7 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None)
     :return:
     """
     message = body.get('message')
-    try:
-        message = MessageDTO.model_dump(message)
-        await send_a_message_to_chat(message)
-
-        await websocket.send_json({"status": 'ok'})
-
-    except AttributeError:
-        raise WrongBodyFormatException('Неверный формат данных в Body')
+    print(message)
+    message = MessageDTO(**message)
+    await send_a_message_to_chat(message)
+    await websocket.send_json({"status": 'ok'})

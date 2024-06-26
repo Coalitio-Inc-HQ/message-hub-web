@@ -40,11 +40,12 @@ async def test_get_waiting_chats() -> list[ChatDTO]:
 
 
 def test_default_error():
-    int('f')
+    message = {'id': 0, 'chat_id': 1, 'sender_id': 1, 'sended_at': '2024-06-26T06:37:17.454Z', 'text': 'test_string'}
+    print(MessageDTO(**message))
 
 
 if __name__ == '__main__':
-    test_chats_list()
+    test_default_error()
     # test_default_error()
     # test_calling_from_base_model(ActionDTO(name='get_waiting_chats', body={"test": "test"}))
     # asyncio.run(test_get_waiting_chats())

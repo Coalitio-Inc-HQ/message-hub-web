@@ -1,11 +1,12 @@
-const express = require('express');
-const app = express();
-const http = require('http');
-const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server);
-const path = require('path');
-const WebSocket = require('ws');
+// Импортируем необходимые модули
+const express = require('express'); // Подключаем Express, минималистичный веб-фреймворк для Node.js
+const app = express(); // Создаем экземпляр приложения Express
+const http = require('http'); // Подключаем встроенный модуль HTTP для создания сервера
+const server = http.createServer(app); // Создаем HTTP-сервер с использованием приложения Express
+const { Server } = require("socket.io"); // Подключаем Socket.io для работы с WebSocket
+const io = new Server(server); // Создаем экземпляр Socket.io, привязанный к HTTP-серверу
+const path = require('path'); // Подключаем встроенный модуль Path для работы с файловыми путями
+const WebSocket = require('ws'); // Подключаем модуль ws для работы с WebSocket
 
 // Middleware для обработки JSON данных
 app.use(express.json());
@@ -15,7 +16,7 @@ let activeChats = {};
 
 // Настройка WebSocket клиента
 const WS_LISTENER_URL = process.env.WS_LISTENER_URL || 'ws://localhost:8000/ws_listener';
-let wsClient;
+let wsClient; // Переменная для хранения WebSocket клиента
 let userId = 2; // Пример userId, замените на актуальный
 
 function connectWebSocket() {
@@ -46,6 +47,9 @@ function connectWebSocket() {
         });
     });
 
+     /**
+     * Обработка сообщений, получаемых через WebSocket
+     */
     wsClient.on('message', (message) => {
         console.log(`Получено сообщение через WebSocket: ${message}`);
         let data;
@@ -57,6 +61,13 @@ function connectWebSocket() {
             return;
         }
 
+
+         /**
+         * Функция для исправления строки JSON
+         * Заменяет одинарные кавычки на двойные и удаляет экранированные двойные кавычки
+         * @param {string} jsonString - Строка JSON для исправления
+         * @return {string} - Исправленная строка JSON
+         */
         function fixJsonString(jsonString) {
             // Заменяем одинарные кавычки на двойные
             let fixedString = jsonString.replace(/'/g, '"');
@@ -92,11 +103,19 @@ function connectWebSocket() {
         }
     });
 
+     /**
+     * Обработка закрытия соединения WebSocket
+     * Пытается переподключиться через 5 секунд
+     */
     wsClient.on('close', () => {
         console.log('WebSocket соединение закрыто. Попытка переподключения через 5 секунд...');
         setTimeout(connectWebSocket, 5000); // Переподключение через 5 секунд
     });
 
+
+     /**
+     * Обработка ошибок WebSocket соединения
+     */
     wsClient.on('error', (error) => {
         console.error(`WebSocket ошибка: ${error.message}`);
     });
@@ -105,6 +124,10 @@ function connectWebSocket() {
 // Инициализация WebSocket клиента
 connectWebSocket();
 
+
+/**
+ * Обработка событий Socket.IO при подключении клиента
+ */
 io.on('connection', (socket) => {
     console.log(`Новое подключение: ${socket.id}`);
 

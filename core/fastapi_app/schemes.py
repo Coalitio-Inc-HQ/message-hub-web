@@ -29,6 +29,13 @@ class ChatDTO(BaseModel):
     name: str
 
 
+class WaitingChatDTO(BaseModel):
+    """
+    Экземпляр ожидающего чата, пришедшего с главного сервера
+    """
+    id: chat_id
+
+
 class MessageDTO(BaseModel):
     """
     Экземпляр сообщения, в данном формате они хранятся
@@ -37,8 +44,9 @@ class MessageDTO(BaseModel):
     id: message_id
     chat_id: chat_id
     sender_id: user_id
-    text: str
-    date: datetime.datetime | str
+    # sent_at: datetime.datetime | str
+    sended_at: datetime.datetime | str
+    text: str | None
 
 
 class UserDTO(BaseModel):
@@ -47,8 +55,8 @@ class UserDTO(BaseModel):
 
 
 class ActionsMapTypedDict(TypedDict):
-    get_waiting_chats: Callable[[user_id], List[ChatDTO]] | None
+    get_waiting_chats: Callable[[count], List[ChatDTO]] | None
     read_chat_by_user: Callable[[user_id, chat_id], ChatDTO] | None
     get_chats_by_user: Callable[[user_id], List[ChatDTO]] | None
-    get_messages_from_chat: Callable[[chat_id, count], List[MessageDTO]] | None
+    get_messages_by_chat: Callable[[chat_id, count], List[MessageDTO]] | None
     send_message_to_chat: Callable[[MessageDTO], None] | None

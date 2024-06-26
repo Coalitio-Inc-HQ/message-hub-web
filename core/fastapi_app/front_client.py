@@ -116,11 +116,7 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None)
     :return:
     """
     message = body.get('message')
-    try:
-        message = MessageDTO.model_dump(message)
-        await send_a_message_to_chat(message)
-
-        await websocket.send_json({"status": 'ok'})
-
-    except AttributeError:
-        raise WrongBodyFormatException('Неверный формат данных в Body')
+    print(message)
+    message = MessageDTO(**message)
+    await send_a_message_to_chat(message)
+    await websocket.send_json({"status": 'ok'})

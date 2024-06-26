@@ -46,4 +46,4 @@ def test_front_websocket_send_message_to_chat():
         print(data)
 
 
-test_front_websocket_waiting_chats_by_user()
+test_front_websocket_send_message_to_chat()

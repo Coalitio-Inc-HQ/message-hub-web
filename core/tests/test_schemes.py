@@ -4,7 +4,7 @@ from pydantic import ValidationError
 
 from core.tests import *
 from core.fastapi_app.front_client import TestData
-from core.fastapi_app.main_client import get_waiting_chats
+from core.fastapi_app.main_client_requests import get_waiting_chats
 
 
 def test_json_dumps():

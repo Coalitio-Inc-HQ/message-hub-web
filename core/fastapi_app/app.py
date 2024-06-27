@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-from core.fastapi_app.main_client import internal_router
+from core.fastapi_app.main_client_requests import internal_router
 from core import logger
 
 

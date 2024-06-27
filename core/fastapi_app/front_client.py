@@ -3,10 +3,10 @@ from starlette.websockets import WebSocketDisconnect
 
 from fastapi import HTTPException
 
-from core.fastapi_app.main_client import get_waiting_chats
-from core.fastapi_app.main_client import get_chats_by_user
-from core.fastapi_app.main_client import get_messages_by_chat
-from core.fastapi_app.main_client import send_a_message_to_chat
+from core.fastapi_app.main_client_requests import get_waiting_chats
+from core.fastapi_app.main_client_requests import get_chats_by_user
+from core.fastapi_app.main_client_requests import get_messages_by_chat
+from core.fastapi_app.main_client_requests import send_a_message_to_chat
 
 from core.fastapi_app.app import app
 from core import websocket_manager

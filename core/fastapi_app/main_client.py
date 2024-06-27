@@ -1,16 +1,17 @@
-from fastapi import APIRouter
 from httpx import AsyncClient
 from pydantic import ValidationError
 
-from core import app_config, ChatDTO, WrongResponseFormatFromMainException, MessageDTO
+from fastapi import APIRouter
 
-router = APIRouter(prefix=app_config.ROUTER_PREFIX)
+from core import app_config
+from core import ChatDTO, MessageDTO
+from core import WrongResponseFormatFromMainException
 
+internal_router = APIRouter(prefix=app_config.INTERNAL_ROUTER_PREFIX)
 
-# @router.get("/get_waiting_chats")
+@internal_router.post("/get_waiting_chats", response_model=list[ChatDTO])
 async def get_waiting_chats(count: int = 50) -> list[ChatDTO]:
-    print(app_config.COPPER_MAIN_URL + "/message_service/get_list_of_waiting_chats")
-    async with AsyncClient(base_url=app_config.COPPER_MAIN_URL) as client:
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/get_list_of_waiting_chats",
                                          json=count)
@@ -24,9 +25,9 @@ async def get_waiting_chats(count: int = 50) -> list[ChatDTO]:
             print(f"Error: {e}")
 
 
-# @router.get("/get_chats_by_user")
+@internal_router.post("/get_chats_by_user", response_model=list[ChatDTO])
 async def get_chats_by_user(user_id: int) -> list[ChatDTO]:
-    async with AsyncClient(base_url=app_config.COPPER_MAIN_URL) as client:
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/get_chats_by_user",
                                          json=user_id)
@@ -39,10 +40,10 @@ async def get_chats_by_user(user_id: int) -> list[ChatDTO]:
             print(f"Error: {e}")
 
 
-@router.post("/get_messages_by_chat")
+@internal_router.post("/get_messages_by_chat", response_model=list[MessageDTO])
 async def get_messages_by_chat(chat_id: int, count: int | None = 50, offset_message_id: int | None = -1) -> list[
     MessageDTO]:
-    async with AsyncClient(base_url=app_config.COPPER_MAIN_URL) as client:
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/get_messages_from_chat",
                                          json={
@@ -60,9 +61,9 @@ async def get_messages_by_chat(chat_id: int, count: int | None = 50, offset_mess
             print(f"Error: {e}")
 
 
-@router.post("/send_a_message_to_chat")
+@internal_router.post("/send_a_message_to_chat")
 async def send_a_message_to_chat(message: MessageDTO):
-    async with AsyncClient(base_url=app_config.COPPER_MAIN_URL) as client:
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         response = await client.post(
             url="/message_service/send_a_message_to_chat",
             json=message.model_dump(),

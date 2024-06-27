@@ -1,32 +1,51 @@
 from starlette.websockets import WebSocket
+from starlette.websockets import WebSocketDisconnect
 
-from core.fastapi_app.main_client import get_waiting_chats, get_chats_by_user, get_messages_by_chat, \
-    send_a_message_to_chat
+from fastapi import HTTPException
 
-from core import ChatDTO, WrongBodyFormatException, ActionDTO, MessageDTO
+from core.fastapi_app.main_client import get_waiting_chats
+from core.fastapi_app.main_client import get_chats_by_user
+from core.fastapi_app.main_client import get_messages_by_chat
+from core.fastapi_app.main_client import send_a_message_to_chat
+
+from core.fastapi_app.app import app
+from core import websocket_manager
+from core import app_config
+from core import ActionDTO, MessageDTO, ActionsMapTypedDict
+from core import WrongBodyFormatException
 
 
-class TestData:
-    def __init__(self):
-        self.test_waiting_chats = [
-            ChatDTO(id=1, name="1"),
-            ChatDTO(id=2, name="2"),
-            ChatDTO(id=3, name="3"),
-            ChatDTO(id=4, name="4")
-        ]
-        self.test_waiting_chats_dict = [
-            chat.model_dump() for chat in self.test_waiting_chats
-        ]
-        self.wrong_type_test_waiting_chats_dict = [
-            {'chat_id': 1, 'chat_name': '1'},
-            {'chat_id': 2, 'chat_name': '2'},
-            {'chat_id': 3, 'chat_name': '3'},
-            {'chat_id': 4, 'chat_name': '4'}
-        ]
-        self.test_user_chats = [
-            ChatDTO(id=55, name="fff"),
-            ChatDTO(id=6, name="fgsdfg")
-        ]
+@app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")
+async def websocket_endpoint(websocket: WebSocket):  # в будущем авторизация по токену
+    """
+    :param websocket: Websocket
+    :return:
+    """
+    await websocket_manager.connect(websocket)
+    try:
+        actions_map = get_websocket_actions()
+        while True:
+            # Получаем данные от фронта в формате ActionDTO
+            data = await websocket.receive_json()
+            action = ActionDTO.model_validate(data)
+
+            if actions_map.__contains__(action.name):
+                await actions_map[action.name](action.body, websocket)
+            else:
+                raise HTTPException(status_code=400,
+                                    detail=f'Неверный заголовок запроса')
+    except WebSocketDisconnect:
+        websocket_manager.disconnect(websocket)
+
+
+def get_websocket_actions() -> ActionsMapTypedDict:
+    return ActionsMapTypedDict(
+        get_waiting_chats=answer_front_waiting_chats,
+        get_chats_by_user=answer_front_chats_by_user,
+        get_messages_by_chat=answer_front_messages_from_chat,
+        send_message_to_chat=process_front_message_to_chat
+        # будут ещё
+    )
 
 
 def check_body_format(keys: list[str]):
@@ -45,6 +64,7 @@ def check_body_format(keys: list[str]):
 
 def get_json_string_of_an_array(list_of_objects: list) -> str:
     return f'{[item.model_dump() for item in list_of_objects]}'
+
 
 @check_body_format(['count'])
 async def answer_front_waiting_chats(body: dict, websocket: WebSocket | None):

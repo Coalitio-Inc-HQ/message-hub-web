@@ -43,6 +43,9 @@ def test_default_error():
     message = {'id': 0, 'chat_id': 1, 'sender_id': 1, 'sended_at': '2024-06-26T06:37:17.454Z', 'text': 'test_string'}
     print(MessageDTO(**message))
 
+    from core.fastapi_app.app import actions_map
+    print(actions_map.items())
+
 
 if __name__ == '__main__':
     test_default_error()

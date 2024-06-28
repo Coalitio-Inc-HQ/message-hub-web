@@ -1,177 +1,135 @@
-// Импортируем необходимые модули
-const express = require('express'); // Подключаем Express, минималистичный веб-фреймворк для Node.js
-const app = express(); // Создаем экземпляр приложения Express
-const http = require('http'); // Подключаем встроенный модуль HTTP для создания сервера
-const server = http.createServer(app); // Создаем HTTP-сервер с использованием приложения Express
-const { Server } = require("socket.io"); // Подключаем Socket.io для работы с WebSocket
-const io = new Server(server); // Создаем экземпляр Socket.io, привязанный к HTTP-серверу
-const path = require('path'); // Подключаем встроенный модуль Path для работы с файловыми путями
-const WebSocket = require('ws'); // Подключаем модуль ws для работы с WebSocket
+const express = require('express');
+const app = express();
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require('socket.io');
+const WebSocket = require('ws');
+const { setEventHandler, getEventHandler } = require('./eventHandlers'); // Импорт функций из модуля
 
-// Middleware для обработки JSON данных
-app.use(express.json());
-
-// Словарь для отслеживания активных чатов
-let activeChats = {};
-
-// Настройка WebSocket клиента
 const WS_LISTENER_URL = process.env.WS_LISTENER_URL || 'ws://localhost:8000/ws_listener';
-let wsClient; // Переменная для хранения WebSocket клиента
-let userId = 2; // Пример userId, замените на актуальный
+let wsClient;
 
-function connectWebSocket() {
+// Обработчики действий
+const actions = {
+    get_waiting_chats: (body) => {
+        return new Promise((resolve, reject) => {
+            const actionDTO = {
+                name: "get_waiting_chats",
+                body: { count: body.count }
+            };
+            console.log(`Sending request for waiting chats with count: ${body.count}`);
+            try {
+                wsClient.send(JSON.stringify(actionDTO));
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
+        });
+    },
+    get_chats_by_user: (body) => {
+        return new Promise((resolve, reject) => {
+            const actionDTO = {
+                name: "get_chats_by_user",
+                body: { user_id: body.user_id }
+            };
+            console.log(`Sending request for chats by user with user_id: ${body.user_id}`);
+            try {
+                wsClient.send(JSON.stringify(actionDTO));
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
+        });
+    },
+    get_messages_by_chat: (body) => {
+        return new Promise((resolve, reject) => {
+            const actionDTO = {
+                name: "get_messages_by_chat",
+                body: {
+                    chat_id: body.chat_id,
+                    count: body.count,
+                    offset_message_id: body.offset_message_id
+                }
+            };
+            console.log(`Sending request for messages by chat with chat_id: ${body.chat_id}, count: ${body.count}, offset_message_id: ${body.offset_message_id}`);
+            try {
+                wsClient.send(JSON.stringify(actionDTO));
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
+        });
+    },
+    send_message_to_chat: (body) => {
+        return new Promise((resolve, reject) => {
+            const actionDTO = {
+                name: "send_message_to_chat",
+                body: {
+                    user_id: body.user_id,
+                    chat_id: body.chat_id,
+                    message: {
+                        id: body.message.id,
+                        chat_id: body.chat_id,
+                        sender_id: body.user_id,
+                        sended_at: new Date().toISOString(),
+                        text: body.message.text
+                    }
+                }
+            };
+            console.log(`Sending message to chat with chat_id: ${body.chat_id}, user_id: ${body.user_id}, message: ${body.message.text}`);
+            try {
+                wsClient.send(JSON.stringify(actionDTO));
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+};
+
+const handleWebSocketMessage = (message) => {
+    const data = JSON.parse(message);
+    console.log(data);
+
+    const eventHandler = getEventHandler(data.name);
+    if (eventHandler) {
+        eventHandler(data);
+    } else {
+        console.log(`No handler for event: ${data.name}`);
+    }
+};
+
+// Функция для подключения к WebSocket серверу
+const connectToWebSocket = (get_waiting_chats = null, get_chats_by_user = null, get_messages_by_chat = null, send_message_to_chat = null) => {
     wsClient = new WebSocket(WS_LISTENER_URL);
 
+    setEventHandler('get_waiting_chats', get_waiting_chats);
+    setEventHandler('get_chats_by_user', get_chats_by_user);
+    setEventHandler('get_messages_by_chat', get_messages_by_chat);
+    setEventHandler('send_message_to_chat', send_message_to_chat);
+
     wsClient.on('open', () => {
-        console.log(`WebSocket клиент подключен к ${WS_LISTENER_URL}`);
-
-        // Отправка запросов при подключении
-        const actions = [
-            {
-                name: "get_waiting_chats",
-                body: {
-                    user_id: userId
-                }
-            },
-            {
-                name: "get_chats_by_user",
-                body: {
-                    user_id: userId
-                }
-            }
-        ];
-
-        actions.forEach(action => {
-            console.log(`Отправка запроса ${action.name} при подключении: `, JSON.stringify(action, null, 2));
-            wsClient.send(JSON.stringify(action));
-        });
+        console.log('Connected to WebSocket server');
     });
 
-     /**
-     * Обработка сообщений, получаемых через WebSocket
-     */
-    wsClient.on('message', (message) => {
-        console.log(`Получено сообщение через WebSocket: ${message}`);
-        let data;
+    wsClient.on('message', handleWebSocketMessage);
 
-        try {
-            data = JSON.parse(message);
-        } catch (error) {
-            console.error(`Ошибка при разборе JSON: ${error.message}`);
-            return;
-        }
-
-
-         /**
-         * Функция для исправления строки JSON
-         * Заменяет одинарные кавычки на двойные и удаляет экранированные двойные кавычки
-         * @param {string} jsonString - Строка JSON для исправления
-         * @return {string} - Исправленная строка JSON
-         */
-        function fixJsonString(jsonString) {
-            // Заменяем одинарные кавычки на двойные
-            let fixedString = jsonString.replace(/'/g, '"');
-            // Удаляем возможные экранированные двойные кавычки
-            fixedString = fixedString.replace(/\\"/g, '"');
-            return fixedString;
-        }
-
-        // Обработка различных типов сообщений
-        switch (data.name) {
-            case 'get_waiting_chats':
-                console.log("Метод: get_waiting_chats");
-                try {
-                    console.log(`Полученные чаты: ${data.body.chats}`);
-                    const chats = JSON.parse(fixJsonString(data.body.chats));
-                    io.emit('waiting_chats', chats);
-                } catch (error) {
-                    console.error(`Ошибка при разборе чатов: ${error.message}`);
-                }
-                break;
-            case 'get_chats_by_user':
-                console.log("Метод: get_chats_by_user");
-                try {
-                    console.log(`Полученные чаты: ${data.body.chats}`);
-                    const chats = JSON.parse(fixJsonString(data.body.chats));
-                    io.emit('user_chats', chats);
-                } catch (error) {
-                    console.error(`Ошибка при разборе чатов: ${error.message}`);
-                }
-                break;
-            default:
-                console.log(`Неизвестный метод: ${data.name}`);
-        }
-    });
-
-     /**
-     * Обработка закрытия соединения WebSocket
-     * Пытается переподключиться через 5 секунд
-     */
     wsClient.on('close', () => {
-        console.log('WebSocket соединение закрыто. Попытка переподключения через 5 секунд...');
-        setTimeout(connectWebSocket, 5000); // Переподключение через 5 секунд
+        console.log('WebSocket connection closed. Reconnecting...');
+        setTimeout(connectToWebSocket, 5000);
     });
 
-
-     /**
-     * Обработка ошибок WebSocket соединения
-     */
     wsClient.on('error', (error) => {
-        console.error(`WebSocket ошибка: ${error.message}`);
+        console.error('WebSocket error:', error);
     });
-}
+};
 
-// Инициализация WebSocket клиента
-connectWebSocket();
+// Подключение к WebSocket серверу
+connectToWebSocket(
+    (data) => { console.log('get_waiting_chats', data); },
+    (data) => { console.log('get_chats_by_user', data); },
+    (data) => { console.log('get_messages_by_chat', data); },
+    (data) => { console.log('send_message_to_chat', data); }
+);
 
-
-/**
- * Обработка событий Socket.IO при подключении клиента
- */
-io.on('connection', (socket) => {
-    console.log(`Новое подключение: ${socket.id}`);
-
-    // Обработчик получения ожидающих чатов
-    socket.on('get_waiting_chats', () => {
-        const actionDTO = {
-            name: "get_waiting_chats",
-            body: {
-                user_id: userId
-            }
-        };
-
-        console.log("Отправка запроса get_waiting_chats: ", JSON.stringify(actionDTO, null, 2));
-        wsClient.send(JSON.stringify(actionDTO));
-    });
-
-    // Обработчик получения чатов пользователя
-    socket.on('get_chats_by_user', () => {
-        const actionDTO = {
-            name: "get_chats_by_user",
-            body: {
-                user_id: userId
-            }
-        };
-
-        console.log("Отправка запроса get_chats_by_user: ", JSON.stringify(actionDTO, null, 2));
-        wsClient.send(JSON.stringify(actionDTO));
-    });
-
-    // Обработчик отключения клиента
-    socket.on('disconnect', () => {
-        console.log(`Клиент отключился: ${socket.id}`);
-    });
-});
-
-// Middleware для обслуживания статических файлов
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Маршрут для отображения HTML-страницы
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
-});
-
-// Запуск сервера
-server.listen(3000, () => {
-    console.log('Сервер слушает на порту 3000');
-});
+module.exports = { actions, connectToWebSocket };

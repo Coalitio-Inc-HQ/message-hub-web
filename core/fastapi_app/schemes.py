@@ -1,5 +1,7 @@
 import datetime
-from typing import Dict, Callable, Any, TypedDict, List
+from typing import Callable, TypedDict, List
+
+from fastapi import WebSocket
 
 from pydantic import BaseModel
 
@@ -8,6 +10,8 @@ chat_id = int
 message_id = int
 count = int
 name = str
+body = dict
+websocket = WebSocket
 
 
 class ActionDTO(BaseModel):
@@ -27,13 +31,6 @@ class ChatDTO(BaseModel):
     """
     id: chat_id
     name: str
-
-
-class WaitingChatDTO(BaseModel):
-    """
-    Экземпляр ожидающего чата, пришедшего с главного сервера
-    """
-    id: chat_id
 
 
 class MessageDTO(BaseModel):

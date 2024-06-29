@@ -2,10 +2,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import ValidationError
 
-from core.fastapi_app.main_client.main_client_requests import internal_router
+from core.fastapi_app.main_client.main_client_requests import internal_router, register_platform
 from core.fastapi_app.main_client.main_client_responses import external_receive_notification_router
 from core.fastapi_app.main_client.main_client_responses import external_receive_messages_router
-from core import logger, app_config, ActionDTO
+from core import logger, app_config, ActionDTO, PlatformRegistrationException
 from core.fastapi_app.websocket_manager import websocket_manager
 from core.fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
 
@@ -15,6 +15,12 @@ async def lifespan(app: FastAPI):
     app.include_router(internal_router)
     app.include_router(external_receive_notification_router)
     app.include_router(external_receive_messages_router)
+    try:
+        await register_platform()
+        logger.info("Регистрация платформы прошла успешно")
+    except PlatformRegistrationException as e:
+        logger.error(e)
+        return
     logger.info("Приложение успешно запущено")
     yield
     logger.info("Приложение успешно остановлено")

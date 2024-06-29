@@ -7,13 +7,33 @@ from fastapi import APIRouter
 
 from core import app_config
 from core import ChatDTO, MessageDTO
-from core import WrongResponseFormatFromMainException
+from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat
 
 from core.fastapi_app.utils import get_list_of_pydantic_objects
 
 internal_router = APIRouter(prefix=app_config.INTERNAL_ROUTER_PREFIX)
 
 logger = logging.getLogger(__name__)
+
+
+@internal_router.post("/register_platform")
+async def register_platform(url: str = app_config.FULL_WEBHOOK_URL):
+    """
+    Регистрация платформы на главном сервере
+
+    :param url: str
+    :return:
+    """
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        response = await client.post("/message_service/platform_registration/web",
+                                     json={
+                                         "platform_name": "web",
+                                         "url": url
+                                     })
+        if response.status_code == 404:
+            raise MainServerWrongUrlException("Неверный url главного сервера")
+        elif response.status_code == 422:
+            raise MainServerWrongJsonFormat("Неверный запрос на регистрацию платформы")
 
 
 @internal_router.post("/get_waiting_chats", response_model=list[ChatDTO])

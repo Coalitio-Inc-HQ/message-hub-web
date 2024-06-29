@@ -9,7 +9,7 @@ from core.fastapi_app.main_client.main_client_requests import send_a_message_to_
 from core.fastapi_app.utils import check_body_format
 from core.fastapi_app.utils import get_json_string_of_an_array
 
-from core.fastapi_app.websocket_connection import websocket_manager
+from core.fastapi_app.websocket_manager import websocket_manager
 
 from core import ActionDTO, MessageDTO, ActionsMapTypedDict
 from core import WrongBodyFormatException
@@ -49,6 +49,7 @@ async def answer_front_waiting_chats(body: dict, websocket: WebSocket | None):
         body={
             "chats": get_json_string_of_an_array(chats)
         })
+    # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
 
 
@@ -70,6 +71,7 @@ async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None):
         body={
             "chats": get_json_string_of_an_array(chats)
         })
+    # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
 
 
@@ -92,6 +94,7 @@ async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | Non
         body={
             "messages": get_json_string_of_an_array(messages)
         })
+    # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
 
 
@@ -123,4 +126,5 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None)
             }
         )
         logger.error("Ошибка при отправки сообщения на главный сервер\n" + e)
+    # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)

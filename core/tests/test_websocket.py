@@ -4,7 +4,6 @@ from core.fastapi_app.app import app
 
 from core import app_config, ActionDTO
 
-from core.fastapi_app.websocket_manager import websocket_manager
 
 def test_front_websocket_waiting_chats_by_user():
     client = TestClient(app)
@@ -49,6 +48,3 @@ def test_front_websocket_send_message_to_chat():
         websocket.send_json(send_action.dict())
         data = websocket.receive_json()
         print(data)
-
-
-test_front_websocket_waiting_chats_by_user()

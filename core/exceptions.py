@@ -8,3 +8,23 @@ class WrongResponseFormatFromMainException(Exception):
     ещё и фронт), либо уведоми ответственного за главный сервер
     """
     pass
+
+class PlatformRegistrationException(Exception):
+    pass
+
+class MainServerWrongUrlException(PlatformRegistrationException):
+    """
+    Неверный адрес регистрации платформы
+    """
+    pass
+
+class MainServerWrongJsonFormat(PlatformRegistrationException):
+    """
+    Неверный формат данных в запросе при регистрации платформы
+    """
+    pass
+
+class MainServerOfflineException(PlatformRegistrationException):
+    """
+    Главный сервер выключен или находится вне зоны действия сети
+    """

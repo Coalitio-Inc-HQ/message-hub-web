@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     INTERNAL_GET_MESSAGE_PREFIX: str
     INTERNAL_GET_NOTIFICATION_PREFIX: str
 
+    @property
+    def FULL_WEBHOOK_URL(self) -> str:
+        return f'{self.INTERNAL_BASE_DOMAIN}{self.INTERNAL_GET_MESSAGE_PREFIX}'
+
     EXTERNAL_MAIN_BASE_URL: str
 
     model_config = SettingsConfigDict(

@@ -23,3 +23,8 @@ class MainServerWrongJsonFormat(PlatformRegistrationException):
     Неверный формат данных в запросе при регистрации платформы
     """
     pass
+
+class MainServerOfflineException(PlatformRegistrationException):
+    """
+    Главный сервер выключен или находится вне зоны действия сети
+    """

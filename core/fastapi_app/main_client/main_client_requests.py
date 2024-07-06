@@ -1,13 +1,14 @@
 import logging
 
-from httpx import AsyncClient
+from httpx import AsyncClient, ConnectError
 from pydantic import ValidationError
 
 from fastapi import APIRouter
 
 from core import app_config
 from core import ChatDTO, MessageDTO
-from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat
+from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat, \
+    MainServerOfflineException
 
 from core.fastapi_app.utils import get_list_of_pydantic_objects
 
@@ -24,12 +25,16 @@ async def register_platform(url: str = app_config.FULL_WEBHOOK_URL):
     :param url: str
     :return:
     """
+    logger.info(app_config.EXTERNAL_MAIN_BASE_URL + "/message_service/platform_registration/web")
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
-        response = await client.post("/message_service/platform_registration/web",
-                                     json={
-                                         "platform_name": "web",
-                                         "url": url
-                                     })
+        try:
+            response = await client.post("/message_service/platform_registration/web",
+                                         json={
+                                             "platform_name": "web",
+                                             "url": url
+                                         })
+        except ConnectError:
+            raise MainServerOfflineException("Главный сервер не в сети")
         if response.status_code == 404:
             raise MainServerWrongUrlException("Неверный url главного сервера")
         elif response.status_code == 422:

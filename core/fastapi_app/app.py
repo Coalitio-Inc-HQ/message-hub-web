@@ -20,7 +20,6 @@ async def lifespan(app: FastAPI):
         logger.info("Регистрация платформы прошла успешно")
     except PlatformRegistrationException as e:
         logger.error(e)
-        return
     logger.info("Приложение успешно запущено")
     yield
     logger.info("Приложение успешно остановлено")
@@ -58,4 +57,4 @@ async def websocket_endpoint(websocket: WebSocket):  # в будущем авт�
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run('app:app', host="localhost", port=8000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

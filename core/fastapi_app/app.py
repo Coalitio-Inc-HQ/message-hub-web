@@ -8,6 +8,7 @@ from core.fastapi_app.main_client.main_client_responses import external_receive_
 from core import logger, app_config, ActionDTO, PlatformRegistrationException
 from core.fastapi_app.websocket_manager import websocket_manager
 from core.fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
+from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager
@@ -26,7 +27,24 @@ async def lifespan(app: FastAPI):
     logger.info("Приложение успешно остановлено")
 
 
+origins = [
+    "http://localhost:8000",
+    "http://localhost:8001",
+    "http://localhost:8002",
+    "http://localhost:8003",
+    "http://localhost:5173"
+]
+
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")
 async def websocket_endpoint(websocket: WebSocket):  # в будущем авторизация по токену
     """
@@ -54,6 +72,41 @@ async def websocket_endpoint(websocket: WebSocket):  # в будущем авт�
                                     detail=f'Неверный формат запроса')
     except WebSocketDisconnect:
         websocket_manager.disconnect(websocket)
+
+
+
+from fastapi_users import FastAPIUsers,fastapi_users
+
+from core.fastapi_app.auth.database import User
+from core.fastapi_app.auth.auth import auth_backend
+from core.fastapi_app.auth.schemes import UserRead,UserCreate,UserUpdate
+from core.fastapi_app.auth.user_manager import get_user_manager
+
+fastapi_users = FastAPIUsers[User, int](
+    get_user_manager,
+    [auth_backend],
+)
+
+current_user = fastapi_users.current_user()
+
+app = FastAPI()
+
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_reset_password_router(),
+    prefix="/auth",
+    tags=["auth"],
+)
+
 
 if __name__ == "__main__":
     import uvicorn

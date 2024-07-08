@@ -3,6 +3,7 @@ import logging
 from starlette.websockets import WebSocket
 
 from core.fastapi_app.main_client.main_client_requests import get_waiting_chats
+from core.fastapi_app.main_client.main_client_requests import connect_to_waiting_chat
 from core.fastapi_app.main_client.main_client_requests import get_chats_by_user
 from core.fastapi_app.main_client.main_client_requests import get_messages_by_chat
 from core.fastapi_app.main_client.main_client_requests import send_a_message_to_chat
@@ -20,11 +21,25 @@ logger = logging.getLogger(__name__)
 def get_websocket_response_actions() -> ActionsMapTypedDict:
     return ActionsMapTypedDict(
         get_waiting_chats=answer_front_waiting_chats,
+        read_chat_by_user=receive_connect_to_waiting_chat,
         get_chats_by_user=answer_front_chats_by_user,
         get_messages_by_chat=answer_front_messages_from_chat,
         send_message_to_chat=process_front_message_to_chat
         # будут ещё
     )
+
+
+@check_body_format(['chat_id'])
+async def receive_connect_to_waiting_chat(body: dict, websocket: WebSocket | None):
+    """
+    Обработка запроса на вступление в ожидающий чат
+
+    :param body: Dict[chat_id: int]
+    :param websocket: Websocket
+    :return:
+    """
+    chat_id = body.get('chat_id')
+    await connect_to_waiting_chat(1, int(chat_id))
 
 
 @check_body_format(['count'])
@@ -49,7 +64,6 @@ async def answer_front_waiting_chats(body: dict, websocket: WebSocket | None):
         body={
             "chats": get_json_string_of_an_array(chats)
         })
-    # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
 
 
@@ -71,7 +85,6 @@ async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None):
         body={
             "chats": get_json_string_of_an_array(chats)
         })
-    # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
 
 
@@ -94,7 +107,6 @@ async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | Non
         body={
             "messages": get_json_string_of_an_array(messages)
         })
-    # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
 
 
@@ -108,7 +120,6 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None)
     :return:
     """
     message = body.get('message')
-    print(message)
     message = MessageDTO(**message)
     try:
         await send_a_message_to_chat(message)
@@ -126,5 +137,4 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None)
             }
         )
         logger.error("Ошибка при отправки сообщения на главный сервер\n" + e)
-    # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)

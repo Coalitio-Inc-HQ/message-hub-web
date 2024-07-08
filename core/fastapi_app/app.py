@@ -20,7 +20,6 @@ async def lifespan(app: FastAPI):
         logger.info("Регистрация платформы прошла успешно")
     except PlatformRegistrationException as e:
         logger.error(e)
-        return
     logger.info("Приложение успешно запущено")
     yield
     logger.info("Приложение успешно остановлено")

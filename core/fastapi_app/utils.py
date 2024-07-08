@@ -5,6 +5,8 @@ from starlette.websockets import WebSocket
 
 from core import WrongBodyFormatException
 
+from core.fastapi_app.auth.database import User
+
 logger = logging.getLogger(__name__)
 
 
@@ -18,11 +20,11 @@ def get_list_of_pydantic_objects(base_model: BaseModel, list_of_elements: list) 
 
 def check_body_format(keys: list[str]):
     def wrapper(func):
-        def inner(body: dict, websocket: WebSocket | None):
+        def inner(body: dict, websocket: WebSocket | None, user: User):
             if not all(key in body.keys() for key in keys):
                 raise WrongBodyFormatException(
                     f"Неверный формат body в запросе. Не достает одного из ключей: {','.join(keys)}")
-            result = func(body, websocket)
+            result = func(body, websocket,user)
             return result
 
         return inner

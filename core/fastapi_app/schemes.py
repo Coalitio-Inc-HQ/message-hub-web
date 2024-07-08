@@ -52,8 +52,19 @@ class UserDTO(BaseModel):
 
 
 class ActionsMapTypedDict(TypedDict):
+    get_user_info: Callable[[], None] | None
     get_waiting_chats: Callable[[count], List[ChatDTO]] | None
     read_chat_by_user: Callable[[user_id, chat_id], ChatDTO] | None
     get_chats_by_user: Callable[[user_id], List[ChatDTO]] | None
+    get_users_by_chat: Callable[[chat_id], List[UserDTO]] | None
     get_messages_by_chat: Callable[[chat_id, count], List[MessageDTO]] | None
+    get_messages_by_waiting_chat: Callable[[chat_id, count], List[MessageDTO]] | None
     send_message_to_chat: Callable[[MessageDTO], None] | None
+
+
+class UserInfoDTO(BaseModel):
+    """
+    Экземпляр информации о пользователе (в локальной бд)
+    """
+    name: str
+    user_id: int

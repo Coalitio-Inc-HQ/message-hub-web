@@ -11,7 +11,7 @@ class ConnectionManager:
 
     def __init__(self):
         self.active_connections: dict[WebSocket] = {}
-        self.active_chat_connections: dict[dict[int]] = {}
+        self.active_chat_connections: dict[list[int]] = {}
 
     async def connect(self, websocket: WebSocket, user_id: int):
         await websocket.accept()
@@ -21,7 +21,7 @@ class ConnectionManager:
         # или найти по WebSocket, user_id
         for chat_connections in self.active_chat_connections:
             chat_connections.remove(user_id)
-        self.active_connections.remove(websocket)
+        self.active_connections.pop(user_id)
 
     async def connect_user_to_chats(self, user_id: int, chat_ids: list[int]):
         """

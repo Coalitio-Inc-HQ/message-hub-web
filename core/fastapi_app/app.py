@@ -97,7 +97,7 @@ async def websocket_endpoint(websocket: WebSocket,user: User = Depends(websocket
             try:
                 action = ActionDTO(**data)
                 if response_actions_map.__contains__(action.name):
-                    await response_actions_map[action.name](action.body, websocket)
+                    await response_actions_map[action.name](action.body, websocket, user)
                 else:
                     raise HTTPException(status_code=400,
                                         detail=f'Неверный заголовок запроса')
@@ -105,7 +105,7 @@ async def websocket_endpoint(websocket: WebSocket,user: User = Depends(websocket
                 raise HTTPException(status_code=400,
                                     detail=f'Неверный формат запроса')
     except WebSocketDisconnect:
-        websocket_manager.disconnect(websocket)
+        websocket_manager.disconnect(websocket,user.user_id)
 
 
 if __name__ == "__main__":

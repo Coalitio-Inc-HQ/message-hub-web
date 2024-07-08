@@ -10,6 +10,16 @@ from core.fastapi_app.websocket_manager import websocket_manager
 from core.fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
 from fastapi.middleware.cors import CORSMiddleware
 
+from fastapi_users import FastAPIUsers,fastapi_users
+
+from fastapi import  Depends
+
+from core.fastapi_app.auth.database import User
+from core.fastapi_app.auth.auth import auth_backend,current_active_user
+from core.fastapi_app.auth.schemes import UserRead,UserCreate,UserUpdate
+from core.fastapi_app.auth.user_manager import get_user_manager
+
+from core.fastapi_app.auth.websocket_auth import websocket_auth_base,websocket_auth_actve
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,43 +55,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")
-async def websocket_endpoint(websocket: WebSocket):  # в будущем авторизация по токену
-    """
-    :param websocket: Websocket
-    :return:
-    """
-    await websocket_manager.connect(websocket)
-    try:
-
-        # Получаем карту методов для ответов фронту
-        response_actions_map = get_websocket_response_actions()
-
-        while True:
-            # Получаем данные от фронта в формате ActionDTO
-            data = await websocket.receive_json()
-            try:
-                action = ActionDTO(**data)
-                if response_actions_map.__contains__(action.name):
-                    await response_actions_map[action.name](action.body, websocket)
-                else:
-                    raise HTTPException(status_code=400,
-                                        detail=f'Неверный заголовок запроса')
-            except ValidationError:
-                raise HTTPException(status_code=400,
-                                    detail=f'Неверный формат запроса')
-    except WebSocketDisconnect:
-        websocket_manager.disconnect(websocket)
-
-
-
-from fastapi_users import FastAPIUsers,fastapi_users
-
-from core.fastapi_app.auth.database import User
-from core.fastapi_app.auth.auth import auth_backend
-from core.fastapi_app.auth.schemes import UserRead,UserCreate,UserUpdate
-from core.fastapi_app.auth.user_manager import get_user_manager
-
 fastapi_users = FastAPIUsers[User, int](
     get_user_manager,
     [auth_backend],
@@ -101,11 +74,37 @@ app.include_router(
     prefix="/auth",
     tags=["auth"],
 )
-app.include_router(
-    fastapi_users.get_reset_password_router(),
-    prefix="/auth",
-    tags=["auth"],
-)
+
+
+@app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")
+async def websocket_endpoint(websocket: WebSocket,user: User = Depends(websocket_auth_actve)):
+    """
+    :param websocket: Websocket
+    :return:
+    """
+
+    print(user)
+
+    await websocket_manager.connect(websocket)
+    try:
+        # Получаем карту методов для ответов фронту
+        response_actions_map = get_websocket_response_actions()
+
+        while True:
+            # Получаем данные от фронта в формате ActionDTO
+            data = await websocket.receive_json()
+            try:
+                action = ActionDTO(**data)
+                if response_actions_map.__contains__(action.name):
+                    await response_actions_map[action.name](action.body, websocket)
+                else:
+                    raise HTTPException(status_code=400,
+                                        detail=f'Неверный заголовок запроса')
+            except ValidationError:
+                raise HTTPException(status_code=400,
+                                    detail=f'Неверный формат запроса')
+    except WebSocketDisconnect:
+        websocket_manager.disconnect(websocket)
 
 
 if __name__ == "__main__":

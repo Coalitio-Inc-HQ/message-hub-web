@@ -1,18 +1,12 @@
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase,Mapped,mapped_column,relationship
-from sqlalchemy import String,Boolean,CheckConstraint,text,ForeignKey,JSON
-
-from core.database.database import engine
-
-import asyncio
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import String, Boolean, CheckConstraint
 
 from typing import Annotated
 
-from datetime import datetime
-
-from core.database.database import get_session
+from .database_engine import get_session
 
 str_256=Annotated[str,256]
 

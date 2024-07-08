@@ -6,8 +6,11 @@ from fastapi_users import  schemas, models,exceptions
 from .database import User, get_user_db
 from httpx import AsyncClient
 
+import logging
 
 from core.config_reader import config
+
+logger = logging.getLogger(__name__)
 
 SECRET = config.SECRET_AUTH
 
@@ -68,12 +71,11 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                 response = await clinet.post("/message_service/user_registration/web",
                                              json={"platform_name": "web", "name": user_dict["name"]})
                 response.raise_for_status()
-                print( response.json()["user_id"])
                 user_dict["user_id"] = response.json()["user_id"]
             except Exception as e:
-                print(
-                    f"Ошибка регистрации на основном сервере: {e}")
-                # logger.error(f"Error: {e}")
+                print(f"Ошибка регистрации на основном сервере: {e}")
+                logger.error(f"Error: {e}")
+                raise Exception("Ошибка регистрации на основном сервере.")
 
         created_user = await self.user_db.create(user_dict)
 

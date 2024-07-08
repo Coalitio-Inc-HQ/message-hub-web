@@ -1,4 +1,5 @@
-from core.fastapi_app.auth.database import Base,engine
+from core.fastapi_app.auth.database import Base
+from  core.fastapi_app.auth.database_engine import engine
 import  asyncio
 
 async def init_models():

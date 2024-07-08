@@ -82,10 +82,11 @@ async def websocket_endpoint(websocket: WebSocket,user: User = Depends(websocket
     :param websocket: Websocket
     :return:
     """
-
+    # todo наверное нужно прокинуть user
+    # todo сделать запрос get_user_info ()->name, user_id из user
     print(user)
 
-    await websocket_manager.connect(websocket)
+    await websocket_manager.connect(websocket, user.user_id)
     try:
         # Получаем карту методов для ответов фронту
         response_actions_map = get_websocket_response_actions()

@@ -14,6 +14,14 @@ body = dict
 websocket = WebSocket
 
 
+class ErrorDTO(BaseModel):
+    """
+    Сообщение об ошибке
+    """
+    error_type: str
+    error_description: str
+
+
 class ActionDTO(BaseModel):
     """
     Экземпляр действия, совершаемого при взаимодействии
@@ -23,6 +31,17 @@ class ActionDTO(BaseModel):
     """
     name: name
     body: dict
+
+
+class ActionDTOOut(ActionDTO):
+    """
+    Экземпляр действия, совершаемого при взаимодействии
+    с приложением через вебсокет
+
+    Формат: {name: str, {...тело}}
+    """
+    status_code: int
+    error: ErrorDTO | None
 
 
 class ChatDTO(BaseModel):
@@ -51,6 +70,11 @@ class UserDTO(BaseModel):
     name: str
 
 
+class ChatUsersDTO(BaseModel):
+    user_id: int
+    chat_id: int
+
+
 class ActionsMapTypedDict(TypedDict):
     get_user_info: Callable[[], None] | None
     get_waiting_chats: Callable[[count], List[ChatDTO]] | None
@@ -59,6 +83,8 @@ class ActionsMapTypedDict(TypedDict):
     get_users_by_chat: Callable[[chat_id], List[UserDTO]] | None
     get_messages_by_chat: Callable[[chat_id, count], List[MessageDTO]] | None
     get_messages_by_waiting_chat: Callable[[chat_id, count], List[MessageDTO]] | None
+    connect_to_waiting_chat: Callable[[chat_id], ChatDTO] | None
+    add_user_to_chat: Callable[[chat_id, user_id], ChatDTO] | None
     send_message_to_chat: Callable[[MessageDTO], None] | None
 
 

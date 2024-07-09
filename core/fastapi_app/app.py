@@ -10,16 +10,16 @@ from core.fastapi_app.websocket_manager import websocket_manager
 from core.fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
 from fastapi.middleware.cors import CORSMiddleware
 
-from fastapi_users import FastAPIUsers,fastapi_users
+from fastapi_users import FastAPIUsers
 
-from fastapi import  Depends
+from fastapi import Depends
 
 from core.fastapi_app.auth.database import User
-from core.fastapi_app.auth.auth import auth_backend,current_active_user
-from core.fastapi_app.auth.schemes import UserRead,UserCreate,UserUpdate
+from core.fastapi_app.auth.auth import auth_backend
+from core.fastapi_app.auth.schemes import UserRead, UserCreate
 from core.fastapi_app.auth.user_manager import get_user_manager
 
-from core.fastapi_app.auth.websocket_auth import websocket_auth_base,websocket_auth_actve
+from core.fastapi_app.auth.websocket_auth import websocket_auth_actve
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -77,15 +77,11 @@ app.include_router(
 
 
 @app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")
-async def websocket_endpoint(websocket: WebSocket,user: User = Depends(websocket_auth_actve)):
+async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocket_auth_actve)):
     """
     :param websocket: Websocket
     :return:
     """
-    # todo наверное нужно прокинуть user
-    # todo сделать запрос get_user_info ()->name, user_id из user
-    print(user)
-
     await websocket_manager.connect(websocket, user.user_id)
     try:
         # Получаем карту методов для ответов фронту
@@ -105,7 +101,7 @@ async def websocket_endpoint(websocket: WebSocket,user: User = Depends(websocket
                 raise HTTPException(status_code=400,
                                     detail=f'Неверный формат запроса')
     except WebSocketDisconnect:
-        websocket_manager.disconnect(websocket,user.user_id)
+        websocket_manager.disconnect(websocket, user.user_id)
 
 
 if __name__ == "__main__":

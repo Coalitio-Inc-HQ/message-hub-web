@@ -1,5 +1,5 @@
 from fastapi import WebSocket
-from core import ActionDTO
+from core import ActionDTO,ActionDTOOut
 
 
 class ConnectionManager:
@@ -11,7 +11,7 @@ class ConnectionManager:
 
     def __init__(self):
         self.active_connections: dict[WebSocket] = {}
-        self.active_chat_connections: dict[list[int]] = {}
+        self.active_chat_connections: dict[set[int]] = {}
 
     async def connect(self, websocket: WebSocket, user_id: int):
         await websocket.accept()
@@ -20,8 +20,9 @@ class ConnectionManager:
     def disconnect(self, websocket: WebSocket, user_id: int):
         # или найти по WebSocket, user_id
         for chat_connections in self.active_chat_connections:
-            chat_connections.remove(user_id)
+            self.active_chat_connections[chat_connections].remove(user_id)
         self.active_connections.pop(user_id)
+        print(self.active_chat_connections)
 
     async def connect_user_to_chats(self, user_id: int, chat_ids: list[int]):
         """
@@ -34,17 +35,17 @@ class ConnectionManager:
         """
 
         for chat_id in chat_ids:
-            if self.active_chat_connections[chat_id]:
-                self.active_chat_connections[chat_id].append(user_id)
+            if chat_id in self.active_chat_connections:
+                self.active_chat_connections[chat_id].add(user_id)
             else:
-                self.active_chat_connections[chat_id] = [user_id]
+                self.active_chat_connections[chat_id] = {user_id}
 
     @staticmethod
     async def send_personal_message(message: str, websocket: WebSocket):
         await websocket.send_text(message)
 
     @staticmethod
-    async def send_personal_response(action: ActionDTO, websocket: WebSocket):
+    async def send_personal_response(action: ActionDTOOut, websocket: WebSocket):
         await websocket.send_json(action.model_dump())
 
     async def broadcast(self, action: ActionDTO):

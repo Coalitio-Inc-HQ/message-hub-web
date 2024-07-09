@@ -91,3 +91,15 @@ async def test_front_websocket_send_message_to_chat(ac: AsyncClient):
         websocket.send_json(send_action.dict())
         data = websocket.receive_json()
         print(data)
+
+
+def test_front_websocket_connect_to_waiting_chat():
+    client = TestClient(app)
+    with client.websocket_connect(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}") as websocket:
+        send_action = ActionDTO(name="read_chat_by_user",
+                                body={
+                                    "chat_id": 1
+                                })
+        websocket.send_json(send_action.dict())
+        data = websocket.receive_json()
+        print(data)

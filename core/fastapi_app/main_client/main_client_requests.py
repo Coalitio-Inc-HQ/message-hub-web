@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from fastapi import APIRouter
 
-from core import app_config
+from core import app_config, UserRegistrationException
 from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO
 from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat, \
     MainServerOfflineException
@@ -33,12 +33,25 @@ async def register_platform(url: str = app_config.FULL_WEBHOOK_URL):
                                              "platform_name": "web",
                                              "url": url
                                          })
+            logger.info(response.text)
         except ConnectError:
             raise MainServerOfflineException("Главный сервер не в сети")
         if response.status_code == 404:
             raise MainServerWrongUrlException("Неверный url главного сервера")
         elif response.status_code == 422:
             raise MainServerWrongJsonFormat("Неверный запрос на регистрацию платформы")
+
+
+@internal_router.post('/register_user')
+async def register_user(name: str, platform_name: str = "web") -> dict:
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/user_registration/web",
+                                         json={"platform_name": platform_name, "name": name})
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            raise UserRegistrationException("Ошибка регистрации пользователя на основном сервере", e)
 
 
 @internal_router.post("/get_waiting_chats", response_model=list[ChatDTO])
@@ -64,6 +77,27 @@ async def get_waiting_chats(count: int = 50) -> list[ChatDTO]:
         except Exception as e:
             print(f"Error: {e}")
             raise e
+
+
+@internal_router.post("/connect_to_waiting_chat")
+async def connect_to_waiting_chat(user_id: int, chat_id: int):
+    """
+    Добавляет пользователя в ожидающий чат
+
+    :param user_id: int
+    :param chat_id: int
+    :return:
+    """
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/connect_to_a_waiting_chat",
+                                         json={
+                                             'user_id': user_id,
+                                             'chat_id': chat_id
+                                         })
+            logger.info(response.text)
+        except Exception as e:
+            logger.error(e)
 
 
 @internal_router.post("/get_chats_by_user", response_model=list[ChatDTO])
@@ -117,7 +151,6 @@ async def get_users_by_chat(user_id: int, chat_id: int) -> list[UserDTO]:
         except Exception as e:
             print(f"Error: {e}")
             raise e
-
 
 
 @internal_router.post("/get_messages_by_chat", response_model=list[MessageDTO])

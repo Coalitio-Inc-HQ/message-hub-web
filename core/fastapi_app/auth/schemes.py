@@ -6,11 +6,6 @@ class UserRead(schemas.BaseUser[int]):
     id: int
     name: str = Field(max_length=256, pattern=".$")
     email: str = Field(max_length=256)
-    is_active: bool = True
-    is_superuser: bool = False
-    is_verified: bool = False
-
-    user_id: int
 
 
 class UserCreate(schemas.CreateUpdateDictModel):

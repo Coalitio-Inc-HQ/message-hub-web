@@ -93,4 +93,4 @@ class UserInfoDTO(BaseModel):
     Экземпляр информации о пользователе (в локальной бд)
     """
     name: str
-    user_id: int
+    id: int

@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from fastapi import APIRouter
 
-from core import app_config
+from core import app_config, UserRegistrationException
 from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO
 from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat, \
     MainServerOfflineException
@@ -40,6 +40,18 @@ async def register_platform(url: str = app_config.FULL_WEBHOOK_URL):
             raise MainServerWrongUrlException("Неверный url главного сервера")
         elif response.status_code == 422:
             raise MainServerWrongJsonFormat("Неверный запрос на регистрацию платформы")
+
+
+@internal_router.post('/register_user')
+async def register_user(name: str, platform_name: str = "web") -> dict:
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/user_registration/web",
+                                         json={"platform_name": platform_name, "name": name})
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            raise UserRegistrationException("Ошибка регистрации пользователя на основном сервере", e)
 
 
 @internal_router.post("/get_waiting_chats", response_model=list[ChatDTO])
@@ -139,7 +151,6 @@ async def get_users_by_chat(user_id: int, chat_id: int) -> list[UserDTO]:
         except Exception as e:
             print(f"Error: {e}")
             raise e
-
 
 
 @internal_router.post("/get_messages_by_chat", response_model=list[MessageDTO])

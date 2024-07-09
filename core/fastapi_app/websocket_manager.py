@@ -1,5 +1,5 @@
 from fastapi import WebSocket
-from core import ActionDTO,ActionDTOOut
+from core import ActionDTO, ActionDTOOut
 
 
 class ConnectionManager:
@@ -26,7 +26,7 @@ class ConnectionManager:
 
     async def connect_user_to_chats(self, user_id: int, chat_ids: list[int]):
         """
-        Добавляет соедение пользователя
+        Добавляет соединение пользователя
         в список чата, для прослушивания
         сообщений в нём.
         :param user_id: int
@@ -40,10 +40,9 @@ class ConnectionManager:
             else:
                 self.active_chat_connections[chat_id] = {user_id}
 
-
-    async  def connect_user_to_chat(self, user_id: int, chat_id: int):
+    async def connect_user_to_chat(self, user_id: int, chat_id: int):
         """
-        Добавляет соедение пользователя
+        Добавляет соединение пользователя
         в список чата, для прослушивания
         сообщений в нём.
         :param user_id: int
@@ -94,7 +93,7 @@ class ConnectionManager:
 
     async def send_to_user_by_user_id(self, action: ActionDTO, user_id: int):
         """
-        Отпровляет сообщение пользователю.
+        Отправляет сообщение пользователю.
 
         :param action: ActionDTO
         :param user_id: int

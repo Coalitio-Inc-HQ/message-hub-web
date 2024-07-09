@@ -4,7 +4,6 @@ import logging
 from starlette.websockets import WebSocket
 
 from core.fastapi_app.main_client.main_client_requests import get_waiting_chats
-from core.fastapi_app.main_client.main_client_requests import connect_to_waiting_chat
 from core.fastapi_app.main_client.main_client_requests import get_chats_by_user
 from core.fastapi_app.main_client.main_client_requests import get_users_by_chat
 from core.fastapi_app.main_client.main_client_requests import get_messages_by_chat
@@ -28,7 +27,7 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
     return ActionsMapTypedDict(
         get_user_info=answer_front_user_info,
         get_waiting_chats=answer_front_waiting_chats,
-        read_chat_by_user=receive_connect_to_waiting_chat,
+        read_chat_by_user=connect_to_waiting_chat,
         get_chats_by_user=answer_front_chats_by_user,
         get_users_by_chat=answer_front_users_by_chat,
         get_messages_by_chat=answer_front_messages_from_chat,
@@ -38,10 +37,11 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
         send_message_to_chat=process_front_message_to_chat
     )
 
+
 @check_body_format([])
 async def answer_front_user_info(body: dict, websocket: WebSocket | None, user: User):
     """
-    Ответ на запрос о получении информаци о текущем пользователе
+    Ответ на запрос о получении информации о текущем пользователе
 
     :param body: Dict[]
     :param websocket: Websocket
@@ -58,6 +58,7 @@ async def answer_front_user_info(body: dict, websocket: WebSocket | None, user: 
     )
     # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
+
 
 @error_catcher("get_waiting_chats")
 @check_body_format(['count'])
@@ -139,7 +140,6 @@ async def answer_front_users_by_chat(body: dict, websocket: WebSocket | None, us
     await websocket_manager.send_personal_response(action, websocket)
 
 
-
 @error_catcher("get_messages_by_chat")
 @check_body_format(['chat_id', 'count', 'offset_message_id'])
 async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | None, user: User):
@@ -166,6 +166,7 @@ async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | Non
     )
     # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
+
 
 @error_catcher("get_messages_by_waiting_chat")
 @check_body_format(['chat_id', 'count', 'offset_message_id'])
@@ -196,11 +197,12 @@ async def answer_front_messages_from_waiting_chat(body: dict, websocket: WebSock
     # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
 
+
 @error_catcher("connect_to_waiting_chat")
 @check_body_format(['chat_id'])
 async def answer_front_connect_to_waiting_chat(body: dict, websocket: WebSocket | None, user: User):
     """
-    Присоеденение к ожидающему чату
+    Присоединение к ожидающему чату
 
     :param body: Dict[chat_id: int]
     :param websocket: Websocket
@@ -253,7 +255,6 @@ async def answer_front_add_user_to_chat(body: dict, websocket: WebSocket | None,
         error=None
     )
     await websocket_manager.send_personal_response(action, websocket)
-
 
 
 @error_catcher("send_message_to_chat")

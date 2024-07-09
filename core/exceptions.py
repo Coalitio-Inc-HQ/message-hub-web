@@ -28,3 +28,9 @@ class MainServerOfflineException(PlatformRegistrationException):
     """
     Главный сервер выключен или находится вне зоны действия сети
     """
+
+class UserRegistrationException(Exception):
+    """
+    Ошибка регистрации пользователя на главном сервере
+    """
+    pass

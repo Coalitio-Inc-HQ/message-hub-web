@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     INTERNAL_GET_MESSAGE_PREFIX: str
     INTERNAL_GET_NOTIFICATION_PREFIX: str
 
-    SECRET_AUTH:str
+    SECRET_AUTH: str
 
     @property
     def FULL_WEBHOOK_URL(self) -> str:

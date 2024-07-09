@@ -9,7 +9,7 @@ from core import WrongBodyFormatException
 
 from core.fastapi_app.auth.database import User
 
-from core import ActionDTOOut,ErrorDTO
+from core import ActionDTOOut, ErrorDTO
 
 from httpx import HTTPStatusError
 
@@ -32,7 +32,7 @@ def check_body_format(keys: list[str]):
             if not all(key in body.keys() for key in keys):
                 raise WrongBodyFormatException(
                     f"Неверный формат body в запросе. Не достает одного из ключей: {','.join(keys)}")
-            result = func(body, websocket,user)
+            result = func(body, websocket, user)
             return result
 
         return inner
@@ -48,7 +48,7 @@ def error_catcher(name: str):
     def wrapper(func):
         async def inner(body: dict, websocket: WebSocket | None, user: User):
             try:
-                result =await func(body, websocket,user)
+                result = await func(body, websocket, user)
                 return result
             except ValueError:
                 action = ActionDTOOut(
@@ -59,7 +59,7 @@ def error_catcher(name: str):
                 )
                 await websocket_manager.send_personal_response(action, websocket)
             except HTTPStatusError as err:
-                if err.response.status_code >= 400 and err.response.status_code < 500:
+                if 400 <= err.response.status_code < 500:
                     action = ActionDTOOut(
                         name=name,
                         body={},
@@ -92,8 +92,6 @@ def error_catcher(name: str):
                 )
                 await websocket_manager.send_personal_response(action, websocket)
 
-
         return inner
+
     return wrapper
-
-

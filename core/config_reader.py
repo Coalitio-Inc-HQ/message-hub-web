@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     @property
     def FULL_WEBHOOK_URL(self) -> str:
-        return f'{self.INTERNAL_BASE_DOMAIN}{self.INTERNAL_GET_MESSAGE_PREFIX}'
+        return f'{self.INTERNAL_BASE_DOMAIN}'
 
     EXTERNAL_MAIN_BASE_URL: str
 

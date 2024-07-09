@@ -29,7 +29,6 @@ async def lifespan(app: FastAPI):
         logger.info("Регистрация платформы прошла успешно")
     except PlatformRegistrationException as e:
         logger.error(e)
-        return
     logger.info("Приложение успешно запущено")
     yield
     logger.info("Приложение успешно остановлено")
@@ -60,8 +59,6 @@ fastapi_users = FastAPIUsers[User, int](
 
 current_user = fastapi_users.current_user()
 
-app = FastAPI()
-
 app.include_router(
     fastapi_users.get_auth_router(auth_backend),
     prefix="/auth/jwt",
@@ -72,8 +69,6 @@ app.include_router(
     prefix="/auth",
     tags=["auth"],
 )
-
-app.include_router(webhooks_router, tags=["webhook"])
 
 
 @app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")

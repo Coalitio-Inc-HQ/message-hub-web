@@ -3,8 +3,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import ValidationError
 
 from core.fastapi_app.main_client.main_client_requests import internal_router, register_platform
-from core.fastapi_app.main_client.main_client_responses import external_receive_notification_router
-from core.fastapi_app.main_client.main_client_responses import external_receive_messages_router
+from core.fastapi_app.main_client.main_client_responses import webhooks_router
 from core import logger, app_config, ActionDTO, PlatformRegistrationException
 from core.fastapi_app.websocket_manager import websocket_manager
 from core.fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
@@ -74,6 +73,8 @@ app.include_router(
     prefix="/auth",
     tags=["auth"],
 )
+
+app.include_router(webhooks_router, tags=["webhook"])
 
 
 @app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")

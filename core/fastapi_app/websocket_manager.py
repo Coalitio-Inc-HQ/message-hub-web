@@ -40,6 +40,22 @@ class ConnectionManager:
             else:
                 self.active_chat_connections[chat_id] = {user_id}
 
+
+    async  def connect_user_to_chat(self, user_id: int, chat_id: int):
+        """
+        Добавляет соедение пользователя
+        в список чата, для прослушивания
+        сообщений в нём.
+        :param user_id: int
+        :param chat_id: list[int]
+        :return:
+        """
+        if user_id in self.active_connections:
+            if chat_id in self.active_chat_connections:
+                self.active_chat_connections[chat_id].add(user_id)
+            else:
+                self.active_chat_connections[chat_id] = {user_id}
+
     @staticmethod
     async def send_personal_message(message: str, websocket: WebSocket):
         await websocket.send_text(message)
@@ -60,7 +76,7 @@ class ConnectionManager:
         """
 
         for connection in self.active_connections:
-            await connection.send_json(action.model_dump())
+            await self.active_connections[connection].send_json(action.model_dump())
 
     async def send_to_chat(self, action: ActionDTO, chat_id: int):
         """
@@ -71,9 +87,21 @@ class ConnectionManager:
         :return:
         """
 
-        if self.active_chat_connections[chat_id]:
+        if chat_id in self.active_chat_connections:
             for connection_id in self.active_chat_connections[chat_id]:
+                print(connection_id)
                 await self.active_connections[connection_id].send_json(action.model_dump())
+
+    async def send_to_user_by_user_id(self, action: ActionDTO, user_id: int):
+        """
+        Отпровляет сообщение пользователю.
+
+        :param action: ActionDTO
+        :param user_id: int
+        :return:
+        """
+        if user_id in self.active_connections:
+            await self.active_connections[user_id].send_json(action.model_dump())
 
 
 websocket_manager = ConnectionManager()

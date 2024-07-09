@@ -23,8 +23,7 @@ from core.fastapi_app.auth.websocket_auth import websocket_auth_actve
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.include_router(internal_router)
-    app.include_router(external_receive_notification_router)
-    app.include_router(external_receive_messages_router)
+    app.include_router(webhooks_router, tags=["webhook"])
     try:
         await register_platform()
         logger.info("Регистрация платформы прошла успешно")

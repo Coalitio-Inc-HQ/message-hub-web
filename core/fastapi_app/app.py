@@ -18,7 +18,8 @@ from core.fastapi_app.auth.auth import auth_backend
 from core.fastapi_app.auth.schemes import UserRead, UserCreate
 from core.fastapi_app.auth.user_manager import get_user_manager
 
-from core.fastapi_app.auth.websocket_auth import websocket_auth_actve
+from core.fastapi_app.auth.websocket_auth import websocket_auth_active
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -72,8 +73,9 @@ app.include_router(
 
 
 @app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")
-async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocket_auth_actve)):
+async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocket_auth_active)):
     """
+    :param user:
     :param websocket: Websocket
     :return:
     """

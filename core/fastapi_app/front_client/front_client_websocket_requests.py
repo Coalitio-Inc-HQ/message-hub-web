@@ -38,7 +38,7 @@ async def trigger_front_new_message_in_chat(message: MessageDTO):
 
 async def trigger_front_new_broadcast_message_in_chat(message: MessageDTO):
     """
-    Отдача информации о новом сообщении в ожидаюшем чате
+    Отдача информации о новом сообщении в ожидающем чате
 
     :param message: MessageDTO
     :return:
@@ -70,9 +70,9 @@ async def trigger_front_new_user_in_chat(chat: ChatDTO, user: UserDTO):
     await websocket_manager.send_to_user_by_user_id(action, user.id)
 
 
-async def trigger_front_delite_waiting_chat(chat: ChatDTO):
+async def trigger_front_delete_waiting_chat(chat: ChatDTO):
     """
-    Отдача информации о удалении ожидающих чатов фронту
+    Отдача информации об удалении ожидающих чатов фронту
 
     :param chat: ChatDTO
     :return:

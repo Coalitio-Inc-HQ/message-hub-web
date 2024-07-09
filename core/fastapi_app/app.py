@@ -3,18 +3,27 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import ValidationError
 
 from core.fastapi_app.main_client.main_client_requests import internal_router, register_platform
-from core.fastapi_app.main_client.main_client_responses import external_receive_notification_router
-from core.fastapi_app.main_client.main_client_responses import external_receive_messages_router
+from core.fastapi_app.main_client.main_client_responses import webhooks_router
 from core import logger, app_config, ActionDTO, PlatformRegistrationException
 from core.fastapi_app.websocket_manager import websocket_manager
 from core.fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
+from fastapi.middleware.cors import CORSMiddleware
 
+from fastapi_users import FastAPIUsers
+
+from fastapi import Depends
+
+from core.fastapi_app.auth.database import User
+from core.fastapi_app.auth.auth import auth_backend
+from core.fastapi_app.auth.schemes import UserRead, UserCreate
+from core.fastapi_app.auth.user_manager import get_user_manager
+
+from core.fastapi_app.auth.websocket_auth import websocket_auth_actve
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.include_router(internal_router)
-    app.include_router(external_receive_notification_router)
-    app.include_router(external_receive_messages_router)
+    app.include_router(webhooks_router, tags=["webhook"])
     try:
         await register_platform()
         logger.info("Регистрация платформы прошла успешно")
@@ -25,16 +34,51 @@ async def lifespan(app: FastAPI):
     logger.info("Приложение успешно остановлено")
 
 
+origins = [
+    "http://localhost:8000",
+    "http://localhost:8001",
+    "http://localhost:8002",
+    "http://localhost:8003",
+    "http://localhost:5173"
+]
+
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+fastapi_users = FastAPIUsers[User, int](
+    get_user_manager,
+    [auth_backend],
+)
+
+current_user = fastapi_users.current_user()
+
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
+
+
 @app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")
-async def websocket_endpoint(websocket: WebSocket):  # в будущем авторизация по токену
+async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocket_auth_actve)):
     """
     :param websocket: Websocket
     :return:
     """
-    await websocket_manager.connect(websocket)
+    await websocket_manager.connect(websocket, user.user_id)
     try:
-
         # Получаем карту методов для ответов фронту
         response_actions_map = get_websocket_response_actions()
 
@@ -44,7 +88,7 @@ async def websocket_endpoint(websocket: WebSocket):  # в будущем авт�
             try:
                 action = ActionDTO(**data)
                 if response_actions_map.__contains__(action.name):
-                    await response_actions_map[action.name](action.body, websocket)
+                    await response_actions_map[action.name](action.body, websocket, user)
                 else:
                     raise HTTPException(status_code=400,
                                         detail=f'Неверный заголовок запроса')
@@ -52,7 +96,8 @@ async def websocket_endpoint(websocket: WebSocket):  # в будущем авт�
                 raise HTTPException(status_code=400,
                                     detail=f'Неверный формат запроса')
     except WebSocketDisconnect:
-        websocket_manager.disconnect(websocket)
+        websocket_manager.disconnect(websocket, user.user_id)
+
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,12 +1,12 @@
 import logging
 
-from httpx import AsyncClient, ConnectError
+from httpx import AsyncClient, ConnectError, HTTPStatusError
 from pydantic import ValidationError
 
 from fastapi import APIRouter
 
 from core import app_config
-from core import ChatDTO, MessageDTO
+from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO
 from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat, \
     MainServerOfflineException
 
@@ -54,13 +54,17 @@ async def get_waiting_chats(count: int = 50) -> list[ChatDTO]:
         try:
             response = await client.post("/message_service/get_list_of_waiting_chats",
                                          json=count)
-            logger.info(response.text)
-            try:
-                return get_list_of_pydantic_objects(ChatDTO, response.json())
-            except ValidationError:
-                raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+            response.raise_for_status()
+
+            return get_list_of_pydantic_objects(ChatDTO, response.json())
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
         except Exception as e:
-            logger.error(e)
+            print(f"Error: {e}")
+            raise e
 
 
 @internal_router.post("/connect_to_waiting_chat")
@@ -96,22 +100,58 @@ async def get_chats_by_user(user_id: int) -> list[ChatDTO]:
         try:
             response = await client.post("/message_service/get_chats_by_user",
                                          json=user_id)
-            logger.info(response.text)
-            try:
-                return get_list_of_pydantic_objects(ChatDTO, response.json())
-            except ValidationError:
-                raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+            response.raise_for_status()
+
+            return get_list_of_pydantic_objects(ChatDTO, response.json())
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
         except Exception as e:
-            logger.error(e)
+            print(f"Error: {e}")
+            raise e
+
+
+@internal_router.post("/get_users_by_chat", response_model=list[UserDTO])
+async def get_users_by_chat(user_id: int, chat_id: int) -> list[UserDTO]:
+    """
+    Получает пользователей чата с главного сервера
+
+    :param user_id: int
+    :param chat_id: int
+    :return: list[UserDTO]
+    """
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/get_users_by_chat_id",
+                                         json={'user_id': user_id,
+                                               'chat_id': chat_id
+                                               })
+            response.raise_for_status()
+
+            return get_list_of_pydantic_objects(UserDTO, response.json())
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e
+
+
 
 @internal_router.post("/get_messages_by_chat", response_model=list[MessageDTO])
 async def get_messages_by_chat(
+        user_id: int,
         chat_id: int,
         count: int = 50,
         offset_message_id: int = -1) -> list[MessageDTO]:
     """
     Получает сообщения из чата с главного сервера
 
+    :param user_id: int
     :param chat_id: int
     :param count: int
     :param offset_message_id: int
@@ -121,17 +161,106 @@ async def get_messages_by_chat(
         try:
             response = await client.post("/message_service/get_messages_from_chat",
                                          json={
+                                             'user_id': user_id,
                                              'chat_id': chat_id,
                                              'count': count,
                                              'offset_message_id': offset_message_id
                                          })
-            logger.info(response.text)
-            try:
-                return get_list_of_pydantic_objects(MessageDTO, response.json())
-            except ValidationError:
-                raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+            response.raise_for_status()
+
+            return get_list_of_pydantic_objects(MessageDTO, response.json())
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
         except Exception as e:
-            logger.error(e)
+            print(f"Error: {e}")
+            raise e
+
+
+@internal_router.post("/get_messages_from_wating_chat", response_model=list[MessageDTO])
+async def get_messages_by_waiting_chat(
+        chat_id: int,
+        count: int = 50,
+        offset_message_id: int = -1) -> list[MessageDTO]:
+    """
+    Получает сообщения из ожидающего чата с главного сервера
+
+    :param chat_id: int
+    :param count: int
+    :param offset_message_id: int
+    :return: list[MessageDTO]
+    """
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/get_messages_from_wating_chat",
+                                         json={
+                                             'chat_id': chat_id,
+                                             'count': count,
+                                             'offset_message_id': offset_message_id
+                                         })
+            response.raise_for_status()
+
+            return get_list_of_pydantic_objects(MessageDTO, response.json())
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e
+
+
+@internal_router.post("/connect_to_waiting_chat", response_model=ChatDTO)
+async def connect_to_waiting_chat(user_id: int, chat_id: int) -> ChatDTO:
+    """
+    Подключает пользователя к ожидающему чату
+
+    :param user_id: int
+    :param chat_id: int
+    :return: ChatDTO
+    """
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/connect_to_a_waiting_chat",
+                                         json={'user_id': user_id, 'chat_id': chat_id})
+            response.raise_for_status()
+            return ChatDTO.model_validate(response.json())
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e
+
+
+@internal_router.post("/add_user_to_chat", response_model=ChatUsersDTO)
+async def add_user_to_chat(chat_id: int, user_id: int) -> ChatUsersDTO:
+    """
+    Подключает пользователя к ожидающему чату
+
+    :param user_id: int
+    :param chat_id: int
+    :return: ChatUsersDTO
+    """
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/connect_user_to_chat",
+                                         json={'user_id': user_id, 'chat_id': chat_id})
+            response.raise_for_status()
+            return ChatUsersDTO.model_validate(response.json())
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e
 
 
 @internal_router.post("/send_a_message_to_chat")
@@ -149,7 +278,13 @@ async def send_a_message_to_chat(message: MessageDTO):
                 json=message.model_dump(),
                 timeout=3000
             )
-            logger.info(response.text)
+            response.raise_for_status()
             return response.json()
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
         except Exception as e:
-            logger.error(e)
+            print(f"Error: {e}")
+            raise e

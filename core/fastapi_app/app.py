@@ -4,7 +4,7 @@ from pydantic import ValidationError
 
 from core.fastapi_app.main_client.main_client_requests import internal_router, register_platform
 from core.fastapi_app.main_client.main_client_responses import webhooks_router
-from core import logger, app_config, ActionDTO, PlatformRegistrationException
+from core import logger, app_config, ActionDTO, PlatformRegistrationException, ActionDTOOut, ErrorDTO
 from core.fastapi_app.websocket_manager import websocket_manager
 from core.fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
 from fastapi.middleware.cors import CORSMiddleware
@@ -79,26 +79,45 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
     :param websocket: Websocket
     :return:
     """
-    await websocket_manager.connect(websocket, user.user_id)
+    await websocket_manager.connect(websocket, user.id)
     try:
         # Получаем карту методов для ответов фронту
         response_actions_map = get_websocket_response_actions()
 
         while True:
-            # Получаем данные от фронта в формате ActionDTO
-            data = await websocket.receive_json()
             try:
+                # Получаем данные от фронта в формате ActionDTO
+                data = await websocket.receive_json()
+                print(data)
                 action = ActionDTO(**data)
                 if response_actions_map.__contains__(action.name):
                     await response_actions_map[action.name](action.body, websocket, user)
                 else:
-                    raise HTTPException(status_code=400,
-                                        detail=f'Неверный заголовок запроса')
+                    err_action = ActionDTOOut(
+                        name=action.name,
+                        body={},
+                        status_code=422,
+                        error=ErrorDTO(error_type="client", error_description=f"Запроса {action.name} не существует")
+                    )
+                    await websocket_manager.send_personal_response(err_action, websocket)
             except ValidationError:
-                raise HTTPException(status_code=400,
-                                    detail=f'Неверный формат запроса')
+                action = ActionDTOOut(
+                    name="undefined",
+                    body={},
+                    status_code=422,
+                    error=ErrorDTO(error_type="client", error_description="Ошибка чтения запроса")
+                )
+                await websocket_manager.send_personal_response(action, websocket)
+            except Exception:
+                action = ActionDTOOut(
+                    name="undefined",
+                    body={},
+                    status_code=500,
+                    error=ErrorDTO(error_type="server", error_description="Внутренняя ошибка сервера")
+                )
+                await websocket_manager.send_personal_response(action, websocket)
     except WebSocketDisconnect:
-        websocket_manager.disconnect(websocket, user.user_id)
+        websocket_manager.disconnect(websocket, user.id)
 
 
 if __name__ == "__main__":

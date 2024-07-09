@@ -3,7 +3,7 @@ import logging
 from httpx import AsyncClient, ConnectError, HTTPStatusError
 from pydantic import ValidationError
 
-from fastapi import APIRouter
+from fastapi import APIRouter,HTTPException
 
 from core import app_config, UserRegistrationException
 from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO
@@ -50,8 +50,11 @@ async def register_user(name: str, platform_name: str = "web") -> dict:
                                          json={"platform_name": platform_name, "name": name})
             response.raise_for_status()
             return response.json()
+        except HTTPException as e:
+            logger.error(f"Error:{e}")
+            raise e
         except Exception as e:
-            raise UserRegistrationException("Ошибка регистрации пользователя на основном сервере", e)
+            raise HTTPException(status_code=500, detail="Ошибка регистрации пользователя на основном сервере")
 
 
 @internal_router.post("/get_waiting_chats", response_model=list[ChatDTO])

@@ -49,7 +49,7 @@ async def answer_front_user_info(body: dict, websocket: WebSocket | None, user: 
     :return:
     """
     action = ActionDTOOut(
-        name="get_waiting_chats",
+        name="get_user_info",
         body={
             "user_info": UserInfoDTO.model_validate(user, from_attributes=True)
         },

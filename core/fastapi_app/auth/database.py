@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import String, Boolean, CheckConstraint
 
+
 from typing import Annotated
 
 from .database_engine import get_session
@@ -27,8 +28,6 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-
-    user_id: Mapped[int] = mapped_column(unique=True)
 
 
 async def get_user_db(session: AsyncSession = Depends(get_session)):

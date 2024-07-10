@@ -27,7 +27,7 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
     return ActionsMapTypedDict(
         get_user_info=answer_front_user_info,
         get_waiting_chats=answer_front_waiting_chats,
-        read_chat_by_user=connect_to_waiting_chat,
+        # read_chat_by_user=connect_to_waiting_chat,
         get_chats_by_user=answer_front_chats_by_user,
         get_users_by_chat=answer_front_users_by_chat,
         get_messages_by_chat=answer_front_messages_from_chat,
@@ -98,9 +98,9 @@ async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None, us
     :param user: User
     :return:
     """
-    chats = await get_chats_by_user(user.user_id)
+    chats = await get_chats_by_user(user.id)
 
-    await websocket_manager.connect_user_to_chats(user.user_id, [chat.id for chat in chats])
+    await websocket_manager.connect_user_to_chats(user.id, [chat.id for chat in chats])
 
     action = ActionDTOOut(
         name="get_chats_by_user",
@@ -125,7 +125,7 @@ async def answer_front_users_by_chat(body: dict, websocket: WebSocket | None, us
     :return:
     """
     chat_id = body.get('chat_id')
-    chats = await get_users_by_chat(user.user_id, chat_id)
+    chats = await get_users_by_chat(user.id, chat_id)
 
     action = ActionDTOOut(
         name="get_users_by_chat",
@@ -154,7 +154,7 @@ async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | Non
     chat_id = body.get('chat_id')
     count = body.get('count')
     offset_message_id = body.get('offset_message_id')
-    messages = await get_messages_by_chat(user.user_id, chat_id, count, offset_message_id)
+    messages = await get_messages_by_chat(user.id, chat_id, count, offset_message_id)
 
     action = ActionDTOOut(
         name="get_messages_by_chat",
@@ -212,7 +212,7 @@ async def answer_front_connect_to_waiting_chat(body: dict, websocket: WebSocket 
     chat_id = body.get('chat_id')
 
     chats = await connect_to_waiting_chat(
-        user.user_id,
+        user.id,
         chat_id
     )  # Получаем ChatDTO с главного сервера, который мы потом отправим во фронт
 
@@ -270,7 +270,7 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None,
     """
     message = body.get('message')
     message = MessageDTO(**message)
-    message.sender_id = user.user_id
+    message.sender_id = user.id
     message.sended_at = datetime.datetime.utcnow().isoformat()
 
     await send_a_message_to_chat(message)

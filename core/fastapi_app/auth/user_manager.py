@@ -10,6 +10,8 @@ import logging
 
 from core.config_reader import config
 
+from core.fastapi_app.main_client.main_client_requests import register_user
+
 logger = logging.getLogger(__name__)
 
 SECRET = config.SECRET_AUTH
@@ -40,16 +42,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         user_dict["hashed_password"] = self.password_helper.hash(password)
 
         # Добавить id
-        async with AsyncClient(base_url=config.EXTERNAL_MAIN_BASE_URL) as client:
-            try:
-                response = await client.post("/message_service/user_registration/web",
-                                             json={"platform_name": "web", "name": user_dict["name"]})
-                response.raise_for_status()
-                user_dict["user_id"] = response.json()["user_id"]
-            except Exception as e:
-                print(f"Ошибка регистрации на основном сервере: {e}")
-                logger.error(f"Error: {e}")
-                raise Exception("Ошибка регистрации на основном сервере.")
+        main_regiser = await register_user(user_dict["name"])
+        user_dict["id"] = main_regiser["user_id"]
 
         created_user = await self.user_db.create(user_dict)
 

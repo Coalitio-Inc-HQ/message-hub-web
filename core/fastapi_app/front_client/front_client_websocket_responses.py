@@ -27,7 +27,6 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
     return ActionsMapTypedDict(
         get_user_info=answer_front_user_info,
         get_waiting_chats=answer_front_waiting_chats,
-        # read_chat_by_user=connect_to_waiting_chat,
         get_chats_by_user=answer_front_chats_by_user,
         get_users_by_chat=answer_front_users_by_chat,
         get_messages_by_chat=answer_front_messages_from_chat,
@@ -49,7 +48,7 @@ async def answer_front_user_info(body: dict, websocket: WebSocket | None, user: 
     :return:
     """
     action = ActionDTOOut(
-        name="get_waiting_chats",
+        name="get_user_info",
         body={
             "user_info": UserInfoDTO.model_validate(user, from_attributes=True)
         },

@@ -83,13 +83,14 @@ def error_catcher(name: str):
                     error=ErrorDTO(error_type="client", error_description=str(err))
                 )
                 await websocket_manager.send_personal_response(action, websocket)
-            except:
+            except Exception as e:
                 action = ActionDTOOut(
                     name=name,
                     body={},
                     status_code=500,
                     error=ErrorDTO(error_type="server", error_description="Неизвестная ошибка")
                 )
+                logger.error("Unknown error: ", e)
                 await websocket_manager.send_personal_response(action, websocket)
 
         return inner

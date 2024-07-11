@@ -270,7 +270,7 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None,
     message = body.get('message')
     message = MessageDTO(**message)
     message.sender_id = user.id
-    message.sended_at = datetime.datetime.utcnow().isoformat()
+    message.sended_at = datetime.datetime.now().isoformat()
 
     await send_a_message_to_chat(message)
     action = ActionDTOOut(

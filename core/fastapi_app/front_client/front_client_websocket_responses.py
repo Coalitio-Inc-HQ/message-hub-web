@@ -16,7 +16,7 @@ from core.fastapi_app.utils import get_json_string_of_an_array
 
 from core.fastapi_app.websocket_manager import websocket_manager
 
-from core import MessageDTO, ActionsMapTypedDict, UserInfoDTO, ActionDTOOut
+from core import MessageDTO, ActionsMapTypedDict, UserInfoDTO, ActionDTOOut,MessageDTOFront
 
 from core.fastapi_app.auth.database import User
 
@@ -268,14 +268,17 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None,
     :return:
     """
     message = body.get('message')
-    message = MessageDTO(**message)
+    message = MessageDTOFront(**message)
     message.sender_id = user.id
     message.sended_at = datetime.datetime.now().isoformat()
 
-    await send_a_message_to_chat(message)
+    res = await send_a_message_to_chat(MessageDTO.model_validate(message,from_attributes=True))
     action = ActionDTOOut(
         name="send_message_to_chat",
-        body={},
+        body={
+            "message_id": res["message_id"],
+            "front_message_id": message.front_message_id
+        },
         status_code=200,
         error=None
     )

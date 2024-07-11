@@ -64,6 +64,8 @@ class MessageDTO(BaseModel):
     sended_at: datetime.datetime | str
     text: str | None
 
+class MessageDTOFront(MessageDTO):
+    front_message_id:int
 
 class UserDTO(BaseModel):
     id: user_id

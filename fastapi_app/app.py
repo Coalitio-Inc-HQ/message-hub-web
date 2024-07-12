@@ -47,14 +47,14 @@ async def lifespan(app: FastAPI):
 
     try:
         await init_models()
-        logger.info("База данных готова")
+        logger.debug("База данных готова")
         await register_platform()
-        logger.info("Регистрация платформы прошла успешно")
+        logger.debug("Регистрация платформы прошла успешно")
     except PlatformRegistrationException as e:
         logger.error(e)
-    logger.info("Приложение успешно запущено")
+    logger.debug("Приложение успешно запущено")
     yield
-    logger.info("Приложение успешно остановлено")
+    logger.debug("Приложение успешно остановлено")
 
 
 app = FastAPI(lifespan=lifespan)
@@ -62,12 +62,12 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://multiply-sterling-snake.ngrok-free.app",
-                   "http://localhost:8000",
-                   "10.210.218.65:0"],
+                   "http://localhost:8001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get("/", response_class=RedirectResponse)
 async def redirect():

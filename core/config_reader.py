@@ -23,10 +23,6 @@ class Settings(BaseSettings):
 
     SECRET_AUTH: str
 
-    @property
-    def FULL_WEBHOOK_URL(self) -> str:
-        return f'{self.INTERNAL_BASE_DOMAIN}'
-
     EXTERNAL_MAIN_BASE_URL: str
 
     model_config = SettingsConfigDict(

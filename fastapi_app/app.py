@@ -28,12 +28,6 @@ async def lifespan(app: FastAPI):
     app.include_router(internal_router)
     app.include_router(webhooks_router, tags=["webhook"])
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
     fastapi_users = FastAPIUsers[User, int](
         get_user_manager,
         [auth_backend],
@@ -64,6 +58,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 @app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")
 async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocket_auth_active)):

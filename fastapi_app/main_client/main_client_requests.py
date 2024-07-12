@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @internal_router.post("/register_platform")
-async def register_platform(url: str = app_config.FULL_WEBHOOK_URL):
+async def register_platform(url: str = app_config.INTERNAL_BASE_DOMAIN):
     """
     Регистрация платформы на главном сервере
 
@@ -217,31 +217,6 @@ async def get_messages_by_waiting_chat(
             response.raise_for_status()
 
             return get_list_of_pydantic_objects(MessageDTO, response.json())
-        except ValidationError:
-            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
-        except HTTPStatusError as e:
-            print(f"http Error: {e}")
-            raise e
-        except Exception as e:
-            print(f"Error: {e}")
-            raise e
-
-
-@internal_router.post("/connect_to_waiting_chat", response_model=ChatDTO)
-async def connect_to_waiting_chat(user_id: int, chat_id: int) -> ChatDTO:
-    """
-    Подключает пользователя к ожидающему чату
-
-    :param user_id: int
-    :param chat_id: int
-    :return: ChatDTO
-    """
-    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
-        try:
-            response = await client.post("/message_service/connect_to_a_waiting_chat",
-                                         json={'user_id': user_id, 'chat_id': chat_id})
-            response.raise_for_status()
-            return ChatDTO.model_validate(response.json())
         except ValidationError:
             raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
         except HTTPStatusError as e:

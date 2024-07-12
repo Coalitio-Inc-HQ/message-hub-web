@@ -59,11 +59,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
-        CORSMiddleware,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")
 async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocket_auth_active)):

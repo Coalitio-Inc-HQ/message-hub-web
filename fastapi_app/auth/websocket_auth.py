@@ -15,7 +15,7 @@ async def websocket_auth_base(websocket: WebSocket, user_manager=Depends(get_use
         user = await (get_jwt_strategy().read_token(cookie, user_manager))
     except:
         await websocket.accept()
-        await websocket.close(code=1008, reason="Ошибка аутентификации1")
+        await websocket.close(code=1008, reason=websocket.cookies)
         raise HTTPException(status_code=401)
     # User is authenticated, you can also check if he is active
     if user and user.is_active:

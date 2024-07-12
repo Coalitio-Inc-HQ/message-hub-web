@@ -3,14 +3,13 @@ from typing import Optional
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin
 from fastapi_users import schemas, models, exceptions
-from .database import User, get_user_db
-from httpx import AsyncClient
+from database.database_schemes import User, get_user_db
 
 import logging
 
 from core.config_reader import config
 
-from core.fastapi_app.main_client.main_client_requests import register_user
+from fastapi_app.main_client.main_client_requests import register_user
 
 logger = logging.getLogger(__name__)
 

@@ -23,14 +23,10 @@ class Settings(BaseSettings):
 
     SECRET_AUTH: str
 
-    @property
-    def FULL_WEBHOOK_URL(self) -> str:
-        return f'{self.INTERNAL_BASE_DOMAIN}'
-
     EXTERNAL_MAIN_BASE_URL: str
 
     model_config = SettingsConfigDict(
-        env_file=os.path.join(os.path.dirname(__file__), ".env"))
+        env_file=os.path.join(os.path.dirname(__file__), "../.env"))
 
 
 config = Settings()

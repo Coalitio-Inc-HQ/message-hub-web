@@ -1,19 +1,17 @@
 import logging
 
-import datetime
-
 from pydantic import BaseModel, ValidationError
 from starlette.websockets import WebSocket
 
 from core import WrongBodyFormatException
 
-from core.fastapi_app.auth.database import User
+from database.database_schemes import User
 
 from core import ActionDTOOut, ErrorDTO
 
 from httpx import HTTPStatusError
 
-from core.fastapi_app.websocket_manager import websocket_manager
+from fastapi_app.websocket_manager import websocket_manager
 
 logger = logging.getLogger(__name__)
 

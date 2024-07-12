@@ -5,12 +5,12 @@ from pydantic import ValidationError
 
 from fastapi import APIRouter,HTTPException
 
-from core import app_config, UserRegistrationException
+from core import app_config
 from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO
 from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat, \
     MainServerOfflineException
 
-from core.fastapi_app.utils import get_list_of_pydantic_objects
+from fastapi_app.utils import get_list_of_pydantic_objects
 
 internal_router = APIRouter(prefix=app_config.INTERNAL_ROUTER_PREFIX)
 

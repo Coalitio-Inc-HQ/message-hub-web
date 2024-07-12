@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     EXTERNAL_MAIN_BASE_URL: str
 
     model_config = SettingsConfigDict(
-        env_file=os.path.join(os.path.dirname(__file__), ".env"))
+        env_file=os.path.join(os.path.dirname(__file__), "../.env"))
 
 
 config = Settings()

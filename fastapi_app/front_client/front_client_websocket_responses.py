@@ -3,22 +3,22 @@ import logging
 
 from starlette.websockets import WebSocket
 
-from core.fastapi_app.main_client.main_client_requests import get_waiting_chats
-from core.fastapi_app.main_client.main_client_requests import get_chats_by_user
-from core.fastapi_app.main_client.main_client_requests import get_users_by_chat
-from core.fastapi_app.main_client.main_client_requests import get_messages_by_chat
-from core.fastapi_app.main_client.main_client_requests import get_messages_by_waiting_chat
-from core.fastapi_app.main_client.main_client_requests import connect_to_waiting_chat
-from core.fastapi_app.main_client.main_client_requests import add_user_to_chat
-from core.fastapi_app.main_client.main_client_requests import send_a_message_to_chat
-from core.fastapi_app.utils import check_body_format, error_catcher
-from core.fastapi_app.utils import get_json_string_of_an_array
+from fastapi_app.main_client.main_client_requests import get_waiting_chats
+from fastapi_app.main_client.main_client_requests import get_chats_by_user
+from fastapi_app.main_client.main_client_requests import get_users_by_chat
+from fastapi_app.main_client.main_client_requests import get_messages_by_chat
+from fastapi_app.main_client.main_client_requests import get_messages_by_waiting_chat
+from fastapi_app.main_client.main_client_requests import connect_to_waiting_chat
+from fastapi_app.main_client.main_client_requests import add_user_to_chat
+from fastapi_app.main_client.main_client_requests import send_a_message_to_chat
+from fastapi_app.utils import check_body_format, error_catcher
+from fastapi_app.utils import get_json_string_of_an_array
 
-from core.fastapi_app.websocket_manager import websocket_manager
+from fastapi_app.websocket_manager import websocket_manager
 
 from core import MessageDTO, ActionsMapTypedDict, UserInfoDTO, ActionDTOOut,MessageDTOFront
 
-from core.fastapi_app.auth.database import User
+from database.database_schemes import User
 
 logger = logging.getLogger(__name__)
 

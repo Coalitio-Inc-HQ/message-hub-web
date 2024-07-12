@@ -1,7 +1,7 @@
-from core.fastapi_app.auth.user_manager import get_user_manager
-from core.fastapi_app.auth.auth import get_jwt_strategy
+from fastapi_app.auth.user_manager import get_user_manager
+from fastapi_app.auth.auth import get_jwt_strategy
 from fastapi import WebSocket, Depends, HTTPException
-from core.fastapi_app.auth.database import User
+from database.database_schemes import User
 
 
 async def websocket_auth_base(websocket: WebSocket, user_manager=Depends(get_user_manager)):

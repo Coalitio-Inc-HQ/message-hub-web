@@ -1,31 +1,58 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
-from core.fastapi_app.main_client.main_client_requests import internal_router, register_platform
-from core.fastapi_app.main_client.main_client_responses import webhooks_router
+from fastapi_app.main_client.main_client_requests import internal_router, register_platform
+from fastapi_app.main_client.main_client_responses import webhooks_router
 from core import logger, app_config, ActionDTO, PlatformRegistrationException, ActionDTOOut, ErrorDTO
-from core.fastapi_app.websocket_manager import websocket_manager
-from core.fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
+from fastapi_app.websocket_manager import websocket_manager
+from fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi_users import FastAPIUsers
 
 from fastapi import Depends
 
-from core.fastapi_app.auth.database import User
-from core.fastapi_app.auth.auth import auth_backend
-from core.fastapi_app.auth.schemes import UserRead, UserCreate
-from core.fastapi_app.auth.user_manager import get_user_manager
+from database.database_schemes import User
+from fastapi_app.auth.auth import auth_backend
+from fastapi_app.auth.auth_schemes import UserRead, UserCreate
+from fastapi_app.auth.user_manager import get_user_manager
 
-from core.fastapi_app.auth.websocket_auth import websocket_auth_active
+from fastapi_app.auth.websocket_auth import websocket_auth_active
+
+from database.create_db import init_models
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.include_router(internal_router)
     app.include_router(webhooks_router, tags=["webhook"])
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    fastapi_users = FastAPIUsers[User, int](
+        get_user_manager,
+        [auth_backend],
+    )
+
+    app.include_router(
+        fastapi_users.get_auth_router(auth_backend),
+        prefix="/auth/jwt",
+        tags=["auth"],
+    )
+    app.include_router(
+        fastapi_users.get_register_router(UserRead, UserCreate),
+        prefix="/auth",
+        tags=["auth"],
+    )
+
     try:
+        await init_models()
+        logger.info("База данных готова")
         await register_platform()
         logger.info("Регистрация платформы прошла успешно")
     except PlatformRegistrationException as e:
@@ -35,41 +62,7 @@ async def lifespan(app: FastAPI):
     logger.info("Приложение успешно остановлено")
 
 
-origins = [
-    "http://localhost:8000",
-    "http://localhost:8001",
-    "http://localhost:8002",
-    "http://localhost:8003",
-    "http://localhost:8080"
-]
-
 app = FastAPI(lifespan=lifespan)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-fastapi_users = FastAPIUsers[User, int](
-    get_user_manager,
-    [auth_backend],
-)
-
-current_user = fastapi_users.current_user()
-
-app.include_router(
-    fastapi_users.get_auth_router(auth_backend),
-    prefix="/auth/jwt",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix="/auth",
-    tags=["auth"],
-)
 
 
 @app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")
@@ -118,9 +111,3 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
                 await websocket_manager.send_personal_response(action, websocket)
     except WebSocketDisconnect:
         websocket_manager.disconnect(websocket, user.id)
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

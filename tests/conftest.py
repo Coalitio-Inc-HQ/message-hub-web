@@ -8,10 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-from core.fastapi_app.auth.database_engine import get_session
-from core.fastapi_app.auth.database import Base
+from database.database_engine import get_session
+from database.database_schemes import Base
 from core.config_reader import config
-from core.fastapi_app.app import app
+from fastapi_app.app import app
 
 # DATABASE
 DATABASE_URL_TEST = f"{config.DB_TYPE}+{config.DB_DRIVER}:///./Test.db"

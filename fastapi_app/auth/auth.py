@@ -4,7 +4,7 @@ from fastapi_users.authentication import AuthenticationBackend
 from core.config_reader import config
 
 from .user_manager import get_user_manager
-from .database import User
+from database.database_schemes import User
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import CookieTransport
 

@@ -2,7 +2,7 @@ import logging
 
 from core.config_reader import config as app_config
 
-from core.fastapi_app.schemes import *
+from core.schemes import *
 
 from core.exceptions import *
 

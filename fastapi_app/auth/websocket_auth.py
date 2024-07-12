@@ -7,15 +7,12 @@ from database.database_schemes import User
 
 logger = logging.getLogger()
 
-async def websocket_auth_base(websocket: WebSocket, user_manager=Depends(get_user_manager)):
+async def websocket_auth_base(websocket: WebSocket,token: str, user_manager=Depends(get_user_manager)):
     try:
-        logger.info(websocket.cookies)
-        cookie = websocket.cookies['fastapiusersauth']
-        logger.info(cookie)
-        user = await (get_jwt_strategy().read_token(cookie, user_manager))
+        user = await (get_jwt_strategy().read_token(token, user_manager))
     except:
         await websocket.accept()
-        await websocket.close(code=1008, reason=websocket.cookies)
+        await websocket.close(code=1008, reason="Ошибка аутентификации1")
         raise HTTPException(status_code=401)
     # User is authenticated, you can also check if he is active
     if user and user.is_active:
@@ -29,7 +26,7 @@ async def websocket_auth_base(websocket: WebSocket, user_manager=Depends(get_use
 
 
 async def websocket_auth_active(websocket: WebSocket, user: User = Depends(websocket_auth_base)):
-    if not User.is_active:
+    if not user.is_active:
         await websocket.accept()
         await websocket.close(code=1008, reason="Пользователь не активен")
         raise HTTPException(status_code=401)

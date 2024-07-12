@@ -61,9 +61,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://multiply-sterling-snake.ngrok-free.app",
-                   "http://localhost:8000",
-                   "10.210.218.65:0"],
+    allow_origins=["https://multiply-sterling-snake.ngrok-free.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

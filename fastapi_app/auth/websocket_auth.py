@@ -1,3 +1,5 @@
+import logging
+
 from fastapi_app.auth.user_manager import get_user_manager
 from fastapi_app.auth.auth import get_jwt_strategy
 from fastapi import WebSocket, Depends, HTTPException
@@ -6,11 +8,11 @@ from database.database_schemes import User
 
 async def websocket_auth_base(websocket: WebSocket, user_manager=Depends(get_user_manager)):
     try:
-        print(websocket.cookies)
+        logging.info(websocket.cookies)
         cookie = websocket.cookies['fastapiusersauth']
-        print(cookie)
+        logging.info(cookie)
         user = await (get_jwt_strategy().read_token(cookie, user_manager))
-        print(user)
+        logging.info(user)
     except:
         await websocket.accept()
         await websocket.close(code=1008, reason="Ошибка аутентификации")

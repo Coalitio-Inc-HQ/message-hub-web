@@ -6,8 +6,11 @@ from database.database_schemes import User
 
 async def websocket_auth_base(websocket: WebSocket, user_manager=Depends(get_user_manager)):
     try:
+        print(websocket.cookies)
         cookie = websocket.cookies['fastapiusersauth']
+        print(cookie)
         user = await (get_jwt_strategy().read_token(cookie, user_manager))
+        print(user)
     except:
         await websocket.accept()
         await websocket.close(code=1008, reason="Ошибка аутентификации")

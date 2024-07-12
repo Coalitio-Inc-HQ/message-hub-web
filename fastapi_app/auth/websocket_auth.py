@@ -8,14 +8,11 @@ from database.database_schemes import User
 
 async def websocket_auth_base(websocket: WebSocket, user_manager=Depends(get_user_manager)):
     try:
-        logging.info(websocket.cookies)
         cookie = websocket.cookies['fastapiusersauth']
-        logging.info(cookie)
         user = await (get_jwt_strategy().read_token(cookie, user_manager))
-        logging.info(user)
     except:
         await websocket.accept()
-        await websocket.close(code=1008, reason="Ошибка аутентификации")
+        await websocket.close(code=1006, reason="Ошибка аутентификации")
         raise HTTPException(status_code=401)
     # User is authenticated, you can also check if he is active
     if user and user.is_active:
@@ -23,7 +20,7 @@ async def websocket_auth_base(websocket: WebSocket, user_manager=Depends(get_use
 
     # The credentials are invalid, expired, or the user does not exist or inactive
     await websocket.accept()
-    await websocket.close(code=1008, reason="Ошибка аутентификации")
+    await websocket.close(code=1007, reason="Ошибка аутентификации")
     raise HTTPException(status_code=401)
     # return None
 

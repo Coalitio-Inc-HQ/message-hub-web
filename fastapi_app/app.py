@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import RedirectResponse
 from pydantic import ValidationError
 
 from fastapi_app.main_client.main_client_requests import internal_router, register_platform
@@ -60,11 +61,15 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://multiply-sterling-snake.ngrok-free.app"],
+    allow_origins=["https://multiply-sterling-snake.ngrok-free.app", "http://localhost:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/", response_class=RedirectResponse)
+async def redirect():
+    return f"/docs"
 
 
 @app.websocket(f"{app_config.INTERNAL_WS_LISTENER_PREFIX}")

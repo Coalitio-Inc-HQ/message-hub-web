@@ -1,12 +1,11 @@
 from fastapi.testclient import TestClient
 
-from core.fastapi_app.app import app
+from fastapi_app.app import app
 
 from core import app_config, ActionDTO
 
 from httpx import AsyncClient
 
-import json
 
 async def test_front_websocket_get_user_info(ac: AsyncClient):
     await ac.post("/auth/register", json={"name": "test", "email": "tes1t@test.py","password":"1234567890"})

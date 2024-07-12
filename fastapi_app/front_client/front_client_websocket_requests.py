@@ -1,7 +1,7 @@
 import logging
 
 from core import ActionDTO, MessageDTO, ChatDTO, UserDTO
-from core.fastapi_app.websocket_manager import websocket_manager
+from fastapi_app.websocket_manager import websocket_manager
 
 logger = logging.getLogger(__name__)
 

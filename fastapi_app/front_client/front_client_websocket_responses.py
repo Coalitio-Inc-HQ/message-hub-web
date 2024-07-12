@@ -3,22 +3,22 @@ import logging
 
 from starlette.websockets import WebSocket
 
-from core.fastapi_app.main_client.main_client_requests import get_waiting_chats
-from core.fastapi_app.main_client.main_client_requests import get_chats_by_user
-from core.fastapi_app.main_client.main_client_requests import get_users_by_chat
-from core.fastapi_app.main_client.main_client_requests import get_messages_by_chat
-from core.fastapi_app.main_client.main_client_requests import get_messages_by_waiting_chat
-from core.fastapi_app.main_client.main_client_requests import connect_to_waiting_chat
-from core.fastapi_app.main_client.main_client_requests import add_user_to_chat
-from core.fastapi_app.main_client.main_client_requests import send_a_message_to_chat
-from core.fastapi_app.utils import check_body_format, error_catcher
-from core.fastapi_app.utils import get_json_string_of_an_array
+from fastapi_app.main_client.main_client_requests import get_waiting_chats
+from fastapi_app.main_client.main_client_requests import get_chats_by_user
+from fastapi_app.main_client.main_client_requests import get_users_by_chat
+from fastapi_app.main_client.main_client_requests import get_messages_by_chat
+from fastapi_app.main_client.main_client_requests import get_messages_by_waiting_chat
+from fastapi_app.main_client.main_client_requests import connect_to_waiting_chat
+from fastapi_app.main_client.main_client_requests import add_user_to_chat
+from fastapi_app.main_client.main_client_requests import send_a_message_to_chat
+from fastapi_app.utils import check_body_format, error_catcher
+from fastapi_app.utils import get_json_string_of_an_array
 
-from core.fastapi_app.websocket_manager import websocket_manager
+from fastapi_app.websocket_manager import websocket_manager
 
-from core import MessageDTO, ActionsMapTypedDict, UserInfoDTO, ActionDTOOut
+from core import MessageDTO, ActionsMapTypedDict, UserInfoDTO, ActionDTOOut,MessageDTOFront
 
-from core.fastapi_app.auth.database import User
+from database.database_schemes import User
 
 logger = logging.getLogger(__name__)
 
@@ -268,14 +268,17 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None,
     :return:
     """
     message = body.get('message')
-    message = MessageDTO(**message)
+    message = MessageDTOFront(**message)
     message.sender_id = user.id
-    message.sended_at = datetime.datetime.utcnow().isoformat()
+    message.sended_at = datetime.datetime.now().isoformat()
 
-    await send_a_message_to_chat(message)
+    res = await send_a_message_to_chat(MessageDTO.model_validate(message,from_attributes=True))
     action = ActionDTOOut(
         name="send_message_to_chat",
-        body={},
+        body={
+            "message_id": res["message_id"],
+            "front_message_id": message.front_message_id
+        },
         status_code=200,
         error=None
     )

@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter
 
 from core import app_config, MessageDTO, ChatDTO,UserDTO
-from core.fastapi_app.front_client.front_client_websocket_requests import trigger_front_new_message_in_chat, \
+from fastapi_app.front_client.front_client_websocket_requests import trigger_front_new_message_in_chat, \
     trigger_front_new_user_in_chat, trigger_front_new_waiting_chat,trigger_front_new_broadcast_message_in_chat,\
     trigger_front_delete_waiting_chat
 

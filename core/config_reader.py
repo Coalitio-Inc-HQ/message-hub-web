@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     DB_NAME: str
     DB_ECHO: bool
 
+    LOG_FILE_PATH: str
+
     @property
     def FULL_DB_URL(self) -> str:
         return f"{self.DB_TYPE}+{self.DB_DRIVER}:///./{self.DB_NAME}"

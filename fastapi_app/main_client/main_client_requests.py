@@ -98,7 +98,8 @@ async def connect_to_waiting_chat(user_id: int, chat_id: int):
                                              'user_id': user_id,
                                              'chat_id': chat_id
                                          })
-            logger.info(response.text)
+            response.raise_for_status()
+            return ChatDTO.model_validate(response.json())
         except Exception as e:
             logger.error(e)
 

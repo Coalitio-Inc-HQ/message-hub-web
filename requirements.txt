@@ -12,6 +12,7 @@ certifi==2024.6.2
 cffi==1.16.0
 click==8.1.7
 colorama==0.4.6
+colorlog==6.8.2
 cryptography==42.0.8
 dnspython==2.6.1
 email_validator==2.1.2
@@ -62,4 +63,5 @@ ujson==5.10.0
 uvicorn==0.30.1
 watchfiles==0.22.0
 websockets==12.0
+win32-setctime==1.1.0
 yarl==1.9.4

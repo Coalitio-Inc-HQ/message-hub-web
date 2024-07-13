@@ -88,7 +88,7 @@ def error_catcher(name: str):
                     status_code=500,
                     error=ErrorDTO(error_type="server", error_description="Неизвестная ошибка")
                 )
-                logger.error("Unknown error: ", e, "name", name)
+                logger.error("Unknown error: ", e, "body", body)
                 await websocket_manager.send_personal_response(action, websocket)
 
         return inner

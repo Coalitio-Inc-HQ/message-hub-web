@@ -1,5 +1,6 @@
 import logging
 
+import httpx
 from httpx import AsyncClient, ConnectError, HTTPStatusError
 from pydantic import ValidationError
 
@@ -34,6 +35,8 @@ async def register_platform(url: str = app_config.INTERNAL_BASE_DOMAIN):
                                              "url": url
                                          })
             logger.info(response.text)
+        except httpx.ReadTimeout:
+            raise MainServerOfflineException("Главный сервер не в сети. Время ожидания ответа превышено")
         except ConnectError:
             raise MainServerOfflineException("Главный сервер не в сети")
         if response.status_code == 404:

@@ -41,8 +41,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         user_dict["hashed_password"] = self.password_helper.hash(password)
 
         # Добавить id
-        main_regiser = await register_user(user_dict["name"])
-        user_dict["id"] = main_regiser["user_id"]
+        main_register = await register_user(user_dict["name"])
+        user_dict["id"] = main_register["user_id"]
 
         created_user = await self.user_db.create(user_dict)
 

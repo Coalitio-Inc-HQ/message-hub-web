@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     @property
     def FULL_DB_URL(self) -> str:
-        return f"{self.DB_TYPE}+{self.DB_DRIVER}:///./{self.DB_NAME}"
+        return f"{self.DB_TYPE}+{self.DB_DRIVER}:///./data/{self.DB_NAME}"
 
     INTERNAL_BASE_DOMAIN: str
     INTERNAL_ROUTER_PREFIX: str

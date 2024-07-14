@@ -5,3 +5,9 @@ services:
     container_name: app
     ports:
       - 8000:8000
+    volumes:
+      - .:/app
+      - sqlite_db:/data/DB.db
+
+volumes:
+  sqlite_db:

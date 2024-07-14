@@ -30,8 +30,14 @@ def init_logger() -> logging.Logger:
         "%(asctime)s - %(levelname)s - %(message)s (%(name)s:%(lineno)d)"
     )
 
-    file_handler = RotatingFileHandler(app_config.LOG_FILE_PATH, encoding="utf-8", maxBytes=10 * 1024 * 1024, backupCount=5)
+    file_handler = RotatingFileHandler(
+        app_config.LOG_FILE_PATH,
+        encoding="utf-8",
+        maxBytes=10 * 1024 * 1024,
+        backupCount=5,
+    )
     file_handler.setFormatter(file_formatter)
+    file_handler.setLevel(logging.ERROR)
 
     logger = logging.getLogger("custom_logger")
     logger.setLevel(logging.DEBUG)

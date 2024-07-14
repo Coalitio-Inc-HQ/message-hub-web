@@ -101,7 +101,8 @@ async def connect_to_waiting_chat(user_id: int, chat_id: int):
                                              'user_id': user_id,
                                              'chat_id': chat_id
                                          })
-            logger.info(response.text)
+            response.raise_for_status()
+            return ChatDTO.model_validate(response.json())
         except Exception as e:
             logger.error(e)
 
@@ -196,7 +197,7 @@ async def get_messages_by_chat(
             raise e
 
 
-@internal_router.post("/get_messages_from_wating_chat", response_model=list[MessageDTO])
+@internal_router.post("/get_messages_from_waiting_chat", response_model=list[MessageDTO])
 async def get_messages_by_waiting_chat(
         chat_id: int,
         count: int = 50,

@@ -5,22 +5,9 @@ services:
     container_name: app
     ports:
       - 8000:8000
-    depends_on:
-      - ngrok
     volumes:
       - .:/app
       - sqlite_db:/data/DB.db
-
-  ngrok:
-    image: ngrok/ngrok:latest
-    restart: unless-stopped
-    command:
-      - "start"
-      - "--all"
-      - "--config"
-      - "/etc/ngrok.yaml"
-    volumes:
-      - ./ngrok.yaml:/etc/ngrok.yaml
 
 volumes:
   sqlite_db:

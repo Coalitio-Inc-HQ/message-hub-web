@@ -5,3 +5,5 @@ __pycache__
 .idea
 *.db
 .env
+error_log.log
+ngrok.yaml

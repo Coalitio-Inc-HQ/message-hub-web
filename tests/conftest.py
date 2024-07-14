@@ -14,7 +14,7 @@ from core.config_reader import config
 from fastapi_app.app import app
 
 # DATABASE
-DATABASE_URL_TEST = f"{config.DB_TYPE}+{config.DB_DRIVER}:///./Test.db"
+DATABASE_URL_TEST = f"{config.DB_TYPE}+{config.DB_DRIVER}:///./data/Test.db"
 
 engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
 async_session_maker = sessionmaker(engine_test, class_=AsyncSession, expire_on_commit=False)

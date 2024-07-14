@@ -1,10 +1,9 @@
-import logging
-
 from core.config_reader import config as app_config
 
 from core.schemes import *
 
 from core.exceptions import *
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('core_logger')
+from core.logger_conf import init_logger
+
+logger = init_logger()

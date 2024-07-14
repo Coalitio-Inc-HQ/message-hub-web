@@ -9,7 +9,7 @@ services:
       - ngrok
     volumes:
       - .:/app
-      - sqlite_db:/DB.db
+      - sqlite_db:/data/DB.db
 
   ngrok:
     image: ngrok/ngrok:latest

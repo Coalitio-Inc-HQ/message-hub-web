@@ -37,7 +37,7 @@ async def receive_new_user_in_chat_from_main(chat: ChatDTO, user: UserDTO):
     return {"ok": True}
 
 
-@webhooks_router.post("/notification_delited_waiting_chat")
+@webhooks_router.post("/notification_deleted_waiting_chat")
 async def receive_delite_waiting_chat_from_main(chat: ChatDTO):
     await trigger_front_delete_waiting_chat(chat)
     return {"ok": True}

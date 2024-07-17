@@ -11,8 +11,6 @@ from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO
 from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat, \
     MainServerOfflineException
 
-from fastapi_app.utils import get_list_of_pydantic_objects
-
 internal_router = APIRouter(prefix=app_config.INTERNAL_ROUTER_PREFIX)
 
 logger = logging.getLogger(__name__)
@@ -74,7 +72,7 @@ async def get_waiting_chats(count: int = 50) -> list[ChatDTO]:
                                          json=count)
             response.raise_for_status()
 
-            return get_list_of_pydantic_objects(ChatDTO, response.json())
+            return response.json()
         except ValidationError:
             raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
         except HTTPStatusError as e:
@@ -121,7 +119,7 @@ async def get_chats_by_user(user_id: int) -> list[ChatDTO]:
                                          json=user_id)
             response.raise_for_status()
 
-            return get_list_of_pydantic_objects(ChatDTO, response.json())
+            return  response.json()
         except ValidationError:
             raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
         except HTTPStatusError as e:
@@ -149,7 +147,7 @@ async def get_users_by_chat(user_id: int, chat_id: int) -> list[UserDTO]:
                                                })
             response.raise_for_status()
 
-            return get_list_of_pydantic_objects(UserDTO, response.json())
+            return response.json()
         except ValidationError:
             raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
         except HTTPStatusError as e:
@@ -186,7 +184,7 @@ async def get_messages_by_chat(
                                          })
             response.raise_for_status()
 
-            return get_list_of_pydantic_objects(MessageDTO, response.json())
+            return response.json()
         except ValidationError:
             raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
         except HTTPStatusError as e:
@@ -220,7 +218,7 @@ async def get_messages_by_waiting_chat(
                                          })
             response.raise_for_status()
 
-            return get_list_of_pydantic_objects(MessageDTO, response.json())
+            return response.json()
         except ValidationError:
             raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
         except HTTPStatusError as e:

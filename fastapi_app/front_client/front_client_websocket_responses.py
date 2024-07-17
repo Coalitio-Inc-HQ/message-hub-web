@@ -12,7 +12,6 @@ from fastapi_app.main_client.main_client_requests import connect_to_waiting_chat
 from fastapi_app.main_client.main_client_requests import add_user_to_chat
 from fastapi_app.main_client.main_client_requests import send_a_message_to_chat
 from fastapi_app.utils import check_body_format, error_catcher
-from fastapi_app.utils import get_json_string_of_an_array
 
 from fastapi_app.websocket_manager import websocket_manager
 
@@ -78,7 +77,7 @@ async def answer_front_waiting_chats(body: dict, websocket: WebSocket | None, us
     action = ActionDTOOut(
         name="get_waiting_chats",
         body={
-            "chats": get_json_string_of_an_array(chats)
+            "chats": chats
         },
         status_code=200,
         error=None
@@ -104,7 +103,7 @@ async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None, us
     action = ActionDTOOut(
         name="get_chats_by_user",
         body={
-            "chats": get_json_string_of_an_array(chats)
+            "chats": chats
         },
         status_code=200,
         error=None
@@ -124,13 +123,13 @@ async def answer_front_users_by_chat(body: dict, websocket: WebSocket | None, us
     :return:
     """
     chat_id = body.get('chat_id')
-    chats = await get_users_by_chat(user.id, chat_id)
+    users = await get_users_by_chat(user.id, chat_id)
 
     action = ActionDTOOut(
         name="get_users_by_chat",
         body={
             "chat_id": chat_id,
-            "users": get_json_string_of_an_array(chats)
+            "users": users
         },
         status_code=200,
         error=None
@@ -158,7 +157,7 @@ async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | Non
     action = ActionDTOOut(
         name="get_messages_by_chat",
         body={
-            "messages": get_json_string_of_an_array(messages)
+            "messages": messages
         },
         status_code=200,
         error=None
@@ -188,7 +187,7 @@ async def answer_front_messages_from_waiting_chat(body: dict, websocket: WebSock
     action = ActionDTOOut(
         name="get_messages_by_waiting_chat",
         body={
-            "messages": get_json_string_of_an_array(messages)
+            "messages": messages
         },
         status_code=200,
         error=None

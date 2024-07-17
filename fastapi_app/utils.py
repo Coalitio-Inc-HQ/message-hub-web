@@ -38,10 +38,6 @@ def check_body_format(keys: list[str]):
     return wrapper
 
 
-def get_json_string_of_an_array(list_of_objects: list) -> str:
-    return f'{[item.model_dump() for item in list_of_objects]}'
-
-
 def error_catcher(name: str):
     def wrapper(func):
         async def inner(body: dict, websocket: WebSocket | None, user: User):

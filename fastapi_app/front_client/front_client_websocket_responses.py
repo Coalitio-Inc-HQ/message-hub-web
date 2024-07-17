@@ -98,7 +98,7 @@ async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None, us
     """
     chats = await get_chats_by_user(user.id)
 
-    await websocket_manager.connect_user_to_chats(user.id, [chat.id for chat in chats])
+    await websocket_manager.connect_user_to_chats(user.id, [chat['id'] for chat in chats])
 
     action = ActionDTOOut(
         name="get_chats_by_user",

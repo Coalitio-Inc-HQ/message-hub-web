@@ -110,6 +110,8 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
                     error=ErrorDTO(error_type="client", error_description="Ошибка чтения запроса")
                 )
                 await websocket_manager.send_personal_response(action, websocket)
+            except WebSocketDisconnect as e:
+                raise e
             except Exception:
                 action = ActionDTOOut(
                     name="undefined",

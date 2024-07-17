@@ -113,12 +113,6 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
             except WebSocketDisconnect as e:
                 raise e
             except Exception:
-                action = ActionDTOOut(
-                    name="undefined",
-                    body={},
-                    status_code=500,
-                    error=ErrorDTO(error_type="server", error_description="Внутренняя ошибка сервера")
-                )
-                await websocket_manager.send_personal_response(action, websocket)
+                logger.error("Unknown error: ", e)
     except WebSocketDisconnect:
         websocket_manager.disconnect(websocket, user.id)

@@ -59,17 +59,17 @@ async def register_user(name: str, platform_name: str = "web") -> dict:
 
 
 @internal_router.post("/get_waiting_chats", response_model=list[ChatDTO])
-async def get_waiting_chats(count: int = 50) -> list[ChatDTO]:
+async def get_chats_in_which_user_is_not_member(user_id: int) -> list[ChatDTO]:
     """
     Получает ожидающие чаты с главного сервера
 
-    :param count: int
+    :param user_id: int
     :return: list[ChatDTO]
     """
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
-            response = await client.post("/message_service/get_list_of_waiting_chats",
-                                         json=count)
+            response = await client.post("/message_service/get_chats_in_which_user_is_not_member",
+                                         json=user_id)
             response.raise_for_status()
 
             return response.json()
@@ -81,28 +81,6 @@ async def get_waiting_chats(count: int = 50) -> list[ChatDTO]:
         except Exception as e:
             print(f"Error: {e}")
             raise e
-
-
-@internal_router.post("/connect_to_waiting_chat")
-async def connect_to_waiting_chat(user_id: int, chat_id: int):
-    """
-    Добавляет пользователя в ожидающий чат
-
-    :param user_id: int
-    :param chat_id: int
-    :return:
-    """
-    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
-        try:
-            response = await client.post("/message_service/connect_to_a_waiting_chat",
-                                         json={
-                                             'user_id': user_id,
-                                             'chat_id': chat_id
-                                         })
-            response.raise_for_status()
-            return ChatDTO.model_validate(response.json())
-        except Exception as e:
-            logger.error(e)
 
 
 @internal_router.post("/get_chats_by_user", response_model=list[ChatDTO])
@@ -131,20 +109,17 @@ async def get_chats_by_user(user_id: int) -> list[ChatDTO]:
 
 
 @internal_router.post("/get_users_by_chat", response_model=list[UserDTO])
-async def get_users_by_chat(user_id: int, chat_id: int) -> list[UserDTO]:
+async def get_users_by_chat(chat_id: int) -> list[UserDTO]:
     """
     Получает пользователей чата с главного сервера
 
-    :param user_id: int
     :param chat_id: int
     :return: list[UserDTO]
     """
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/get_users_by_chat_id",
-                                         json={'user_id': user_id,
-                                               'chat_id': chat_id
-                                               })
+                                         json=chat_id)
             response.raise_for_status()
 
             return response.json()
@@ -160,14 +135,12 @@ async def get_users_by_chat(user_id: int, chat_id: int) -> list[UserDTO]:
 
 @internal_router.post("/get_messages_by_chat", response_model=list[MessageDTO])
 async def get_messages_by_chat(
-        user_id: int,
         chat_id: int,
         count: int = 50,
         offset_message_id: int = -1) -> list[MessageDTO]:
     """
     Получает сообщения из чата с главного сервера
 
-    :param user_id: int
     :param chat_id: int
     :param count: int
     :param offset_message_id: int
@@ -176,41 +149,6 @@ async def get_messages_by_chat(
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/get_messages_from_chat",
-                                         json={
-                                             'user_id': user_id,
-                                             'chat_id': chat_id,
-                                             'count': count,
-                                             'offset_message_id': offset_message_id
-                                         })
-            response.raise_for_status()
-
-            return response.json()
-        except ValidationError:
-            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
-        except HTTPStatusError as e:
-            print(f"http Error: {e}")
-            raise e
-        except Exception as e:
-            print(f"Error: {e}")
-            raise e
-
-
-@internal_router.post("/get_messages_from_waiting_chat", response_model=list[MessageDTO])
-async def get_messages_by_waiting_chat(
-        chat_id: int,
-        count: int = 50,
-        offset_message_id: int = -1) -> list[MessageDTO]:
-    """
-    Получает сообщения из ожидающего чата с главного сервера
-
-    :param chat_id: int
-    :param count: int
-    :param offset_message_id: int
-    :return: list[MessageDTO]
-    """
-    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
-        try:
-            response = await client.post("/message_service/get_messages_from_wating_chat",
                                          json={
                                              'chat_id': chat_id,
                                              'count': count,

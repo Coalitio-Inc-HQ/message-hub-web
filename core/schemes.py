@@ -79,13 +79,11 @@ class ChatUsersDTO(BaseModel):
 
 class ActionsMapTypedDict(TypedDict):
     get_user_info: Callable[[], None] | None
-    get_waiting_chats: Callable[[count], List[ChatDTO]] | None
+    get_chats_in_which_user_is_not_member: Callable[[count], List[ChatDTO]] | None
     read_chat_by_user: Callable[[user_id, chat_id], ChatDTO] | None
     get_chats_by_user: Callable[[user_id], List[ChatDTO]] | None
     get_users_by_chat: Callable[[chat_id], List[UserDTO]] | None
     get_messages_by_chat: Callable[[chat_id, count], List[MessageDTO]] | None
-    get_messages_by_waiting_chat: Callable[[chat_id, count], List[MessageDTO]] | None
-    connect_to_waiting_chat: Callable[[chat_id], ChatDTO] | None
     add_user_to_chat: Callable[[chat_id, user_id], ChatDTO] | None
     send_message_to_chat: Callable[[MessageDTO], None] | None
 

@@ -2,14 +2,15 @@ services:
   app:
     build:
       context: .
-    container_name: app_web
+    container_name: web
+    env_file:
+      - .env
     ports:
       - 8000:8000
     volumes:
       - .:/app
-      - sqlite_db:/data/DB.db
+      - sqlite_db:/app/data
     extra_hosts:
       - "host.docker.internal:host-gateway"
-
 volumes:
   sqlite_db:

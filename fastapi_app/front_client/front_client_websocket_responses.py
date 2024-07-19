@@ -54,7 +54,6 @@ async def answer_front_user_info(body: dict, websocket: WebSocket | None, user: 
         status_code=200,
         error=None
     )
-    # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
 
 
@@ -97,8 +96,6 @@ async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None, us
     :return:
     """
     chats = await get_chats_by_user(user.id)
-
-    await websocket_manager.connect_user_to_chats(user.id, [chat['id'] for chat in chats])
 
     action = ActionDTOOut(
         name="get_chats_by_user",

@@ -16,14 +16,6 @@ from fastapi_app.websocket_manager import websocket_manager
 logger = logging.getLogger(__name__)
 
 
-def get_list_of_pydantic_objects(base_model: BaseModel, list_of_elements: list) -> list[BaseModel]:
-    try:
-        return [base_model.model_validate(chat) for chat in list_of_elements]
-    except ValidationError as e:
-        logger.error("Ошибка при преобразовании списка элементов в pydantic модель")
-        return []
-
-
 def check_body_format(keys: list[str]):
     def wrapper(func):
         def inner(body: dict, websocket: WebSocket | None, user: User):

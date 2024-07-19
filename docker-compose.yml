@@ -9,8 +9,8 @@ services:
       - 8000:8000
     volumes:
       - .:/app
-      - sqlite_db:/app/data
+      - data:/app/data
     extra_hosts:
       - "host.docker.internal:host-gateway"
 volumes:
-  sqlite_db:
+  data:

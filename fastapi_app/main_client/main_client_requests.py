@@ -58,10 +58,10 @@ async def register_user(name: str, platform_name: str = "web") -> dict:
             raise HTTPException(status_code=500, detail="Ошибка регистрации пользователя на основном сервере")
 
 
-@internal_router.post("/get_waiting_chats", response_model=list[ChatDTO])
+@internal_router.post("/get_chats_in_which_user_is_not_member", response_model=list[ChatDTO])
 async def get_chats_in_which_user_is_not_member(user_id: int) -> list[ChatDTO]:
     """
-    Получает ожидающие чаты с главного сервера
+    Получает чаты в которых нет пользователь с главного сервера
 
     :param user_id: int
     :return: list[ChatDTO]

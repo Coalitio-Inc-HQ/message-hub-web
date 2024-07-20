@@ -1,27 +1,23 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import RedirectResponse
-from pydantic import ValidationError
-
-from fastapi_app.main_client.main_client_requests import internal_router, register_platform
-from fastapi_app.main_client.main_client_responses import webhooks_router
-from core import logger, app_config, ActionDTO, PlatformRegistrationException, ActionDTOOut, ErrorDTO
-from fastapi_app.websocket_manager import websocket_manager
-from fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
-from fastapi.middleware.cors import CORSMiddleware
-
-from fastapi_users import FastAPIUsers
 
 from fastapi import Depends
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi_users import FastAPIUsers
+from pydantic import ValidationError
 
+from core import logger, app_config, ActionDTO, PlatformRegistrationException, ActionDTOOut, ErrorDTO
+from database.create_db import init_models
 from database.database_schemes import User
 from fastapi_app.auth.auth import auth_backend
 from fastapi_app.auth.auth_schemes import UserRead, UserCreate
 from fastapi_app.auth.user_manager import get_user_manager
-
 from fastapi_app.auth.websocket_auth import websocket_auth_active
-
-from database.create_db import init_models
+from fastapi_app.front_client.front_client_websocket_responses import get_websocket_response_actions
+from fastapi_app.main_client.main_client_requests import internal_router, register_platform
+from fastapi_app.main_client.main_client_responses import webhooks_router
+from fastapi_app.websocket_manager import websocket_manager
 
 
 @asynccontextmanager
@@ -59,10 +55,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+logger.debug("Добавлены корсы: " + ', '.join(app_config.ALLOW_ORIGINS_LIST))
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://multiply-sterling-snake.ngrok-free.app",
-                   "http://localhost:8001"],
+    allow_origins=app_config.ALLOW_ORIGINS_LIST,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

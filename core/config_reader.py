@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     INTERNAL_WS_LISTENER_PREFIX: str
     INTERNAL_GET_MESSAGE_PREFIX: str
     INTERNAL_GET_NOTIFICATION_PREFIX: str
+    ALLOW_ORIGINS: str
+
+    @property
+    def ALLOW_ORIGINS_LIST(self) -> list[str]:
+        return self.ALLOW_ORIGINS.split(',')
 
     SECRET_AUTH: str
 

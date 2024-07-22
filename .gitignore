@@ -8,3 +8,4 @@ __pycache__
 .env-doc
 error_log.log
 ngrok.yaml
+TODO.md

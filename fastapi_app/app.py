@@ -22,25 +22,6 @@ from fastapi_app.websocket_manager import websocket_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.include_router(internal_router)
-    app.include_router(webhooks_router, tags=["webhook"])
-
-    fastapi_users = FastAPIUsers[User, int](
-        get_user_manager,
-        [auth_backend],
-    )
-
-    app.include_router(
-        fastapi_users.get_auth_router(auth_backend),
-        prefix="/auth/jwt",
-        tags=["auth"],
-    )
-    app.include_router(
-        fastapi_users.get_register_router(UserRead, UserCreate),
-        prefix="/auth",
-        tags=["auth"],
-    )
-
     try:
         await init_models()
         logger.debug("База данных готова")
@@ -55,13 +36,32 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-logger.debug("Добавлены корсы: " + ', '.join(app_config.ALLOW_ORIGINS_LIST))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=app_config.ALLOW_ORIGINS_LIST,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+logger.debug("Добавлены корсы: " + ', '.join(app_config.ALLOW_ORIGINS_LIST))
+
+app.include_router(internal_router)
+app.include_router(webhooks_router, tags=["webhook"])
+
+fastapi_users = FastAPIUsers[User, int](
+    get_user_manager,
+    [auth_backend],
+)
+
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
 )
 
 

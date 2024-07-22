@@ -7,7 +7,8 @@ from database.database_schemes import User
 
 logger = logging.getLogger()
 
-async def websocket_auth_base(websocket: WebSocket,token: str, user_manager=Depends(get_user_manager)):
+
+async def websocket_auth_base(websocket: WebSocket, token: str, user_manager=Depends(get_user_manager)):
     try:
         user = await (get_jwt_strategy().read_token(token, user_manager))
     except:

@@ -4,7 +4,7 @@ import httpx
 from httpx import AsyncClient, ConnectError, HTTPStatusError
 from pydantic import ValidationError
 
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter, HTTPException
 
 from core import app_config
 from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO
@@ -32,15 +32,17 @@ async def register_platform(url: str = app_config.INTERNAL_BASE_DOMAIN):
                                              "platform_name": "web",
                                              "url": url
                                          })
-            logger.info(response.text)
         except httpx.ReadTimeout:
             raise MainServerOfflineException("Главный сервер не в сети. Время ожидания ответа превышено")
         except ConnectError:
             raise MainServerOfflineException("Главный сервер не в сети")
+
         if response.status_code == 404:
             raise MainServerWrongUrlException("Неверный url главного сервера")
         elif response.status_code == 422:
             raise MainServerWrongJsonFormat("Неверный запрос на регистрацию платформы")
+
+        return response.json()
 
 
 @internal_router.post('/register_user')
@@ -97,7 +99,7 @@ async def get_chats_by_user(user_id: int) -> list[ChatDTO]:
                                          json=user_id)
             response.raise_for_status()
 
-            return  response.json()
+            return response.json()
         except ValidationError:
             raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
         except HTTPStatusError as e:

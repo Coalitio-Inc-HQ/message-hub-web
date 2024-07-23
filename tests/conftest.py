@@ -1,3 +1,5 @@
+import string
+from random import choice
 from typing import AsyncGenerator
 
 import pytest
@@ -25,6 +27,25 @@ async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 app.dependency_overrides[get_session] = override_get_session
+
+
+def _get_random_email(size: int = 6, chars: str = string.ascii_uppercase + string.digits):
+    return ''.join(choice(chars) for _ in range(size))
+
+
+class TestUserData:
+    __test__ = False
+
+    def __init__(self):
+        self.data = {
+            "email": f'{_get_random_email()}@pytest.pytest',
+            "password": "Aa1234567890!"
+        }
+
+
+@pytest.fixture(scope='session')
+def test_user_data():
+    return TestUserData()
 
 
 @pytest.fixture(autouse=True, scope='session')

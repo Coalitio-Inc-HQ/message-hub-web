@@ -4,6 +4,7 @@ from typing import Callable, TypedDict, List
 from fastapi import WebSocket
 
 from pydantic import BaseModel
+from typing import  Any
 
 user_id = int
 chat_id = int
@@ -50,6 +51,13 @@ class ChatDTO(BaseModel):
     """
     id: chat_id
     name: str
+    is_waiting_answer: bool
+    is_archive: bool
+
+
+class ExtChatDTO(ChatDTO):
+    last_read_message_id: int | None = None
+
 
 
 class MessageDTO(BaseModel):
@@ -63,6 +71,7 @@ class MessageDTO(BaseModel):
     # sent_at: datetime.datetime | str
     sended_at: datetime.datetime | str
     text: str | None
+    attachments: dict
 
 class MessageDTOFront(MessageDTO):
     front_message_id:int
@@ -94,3 +103,10 @@ class UserInfoDTO(BaseModel):
     """
     name: str
     id: int
+
+class Event(BaseModel):
+    """
+    Событие
+    """
+    name: str
+    data: Any

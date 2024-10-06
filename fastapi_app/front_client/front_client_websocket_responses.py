@@ -28,7 +28,8 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
         get_users_by_chat=answer_front_users_by_chat,
         get_messages_by_chat=answer_front_messages_from_chat,
         add_user_to_chat=answer_front_add_user_to_chat,
-        send_message_to_chat=process_front_message_to_chat
+        send_message_to_chat=process_front_message_to_chat,
+        get_chats = answer_get_chats,
     )
 
 
@@ -212,6 +213,32 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None,
         body={
             "message_id": res["message_id"],
             "front_message_id": message.front_message_id
+        },
+        status_code=200,
+        error=None
+    )
+    await websocket_manager.send_personal_response(action, websocket)
+
+
+@error_catcher("get_chats")
+@check_body_format([])
+async def answer_get_chats(body: dict, websocket: WebSocket | None, user: User):
+    """
+    Ответ на запрос о получении чатов пользователя от фронта.
+
+    :param body: Dict[]
+    :param websocket: Websocket
+    :param user: User
+    :return:
+    """
+    chats = await get_chats_by_user(user.id)
+
+    await websocket_manager.connect_user_to_chats(user.id, [chat['id'] for chat in chats])
+
+    action = ActionDTOOut(
+        name="get_chats",
+        body={
+            "chats": chats
         },
         status_code=200,
         error=None

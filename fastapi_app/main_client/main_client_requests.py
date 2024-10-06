@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from fastapi import APIRouter,HTTPException
 
 from core import app_config
-from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO
+from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO, ExtChatDTO
 from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat, \
     MainServerOfflineException
 
@@ -208,6 +208,32 @@ async def send_a_message_to_chat(message: MessageDTO):
                 timeout=3000
             )
             response.raise_for_status()
+            return response.json()
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e
+
+
+
+@internal_router.post("/get_chats", response_model=list[ExtChatDTO])
+async def get_chats_by_user(user_id: int) -> list[ExtChatDTO]:
+    """
+    Получает чаты пользователя с главного сервера
+
+    :param user_id: int
+    :return: list[ChatDTO]
+    """
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/get_chats",
+                                         json=user_id)
+            response.raise_for_status()
+
             return response.json()
         except ValidationError:
             raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")

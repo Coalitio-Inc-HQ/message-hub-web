@@ -27,6 +27,8 @@ class Settings(BaseSettings):
 
     EXTERNAL_MAIN_BASE_URL: str
 
+    S3_BUCKET_URL: str
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(__file__), "../.env"))
 

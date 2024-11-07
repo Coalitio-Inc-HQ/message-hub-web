@@ -3,7 +3,7 @@ from typing import Callable, TypedDict, List
 
 from fastapi import WebSocket
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import  Any
 
 user_id = int
@@ -50,9 +50,10 @@ class ChatDTO(BaseModel):
     Экземпляр чата, пришедшего с главного сервера
     """
     id: chat_id
-    name: str
+    name: str = Field(max_length=256)
     is_waiting_answer: bool
     is_archive: bool
+    icon_url: str | None = Field(max_length=256)
 
 
 class ExtChatDTO(ChatDTO):
@@ -79,6 +80,7 @@ class MessageDTOFront(MessageDTO):
 class UserDTO(BaseModel):
     id: user_id
     name: str
+    icon_url: str | None = Field(max_length=256)
 
 
 class ChatUsersDTO(BaseModel):

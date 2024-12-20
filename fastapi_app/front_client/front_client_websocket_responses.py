@@ -212,7 +212,8 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None,
         name="send_message_to_chat",
         body={
             "message_id": res["message_id"],
-            "front_message_id": message.front_message_id
+            "front_message_id": message.front_message_id,
+            "chat_id": message.chat_id
         },
         status_code=200,
         error=None

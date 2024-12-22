@@ -8,7 +8,7 @@ from fastapi_app.main_client.main_client_requests import get_chats_by_user
 from fastapi_app.main_client.main_client_requests import get_users_by_chat
 from fastapi_app.main_client.main_client_requests import get_messages_by_chat
 from fastapi_app.main_client.main_client_requests import add_user_to_chat
-from fastapi_app.main_client.main_client_requests import send_a_message_to_chat
+from fastapi_app.main_client.main_client_requests import send_a_message_to_chat, remove_to_archive
 from fastapi_app.utils import check_body_format, error_catcher
 
 from fastapi_app.websocket_manager import websocket_manager
@@ -30,6 +30,7 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
         add_user_to_chat=answer_front_add_user_to_chat,
         send_message_to_chat=process_front_message_to_chat,
         get_chats = answer_get_chats,
+        remove_to_archive = answer_remove_to_archive,
     )
 
 
@@ -240,6 +241,32 @@ async def answer_get_chats(body: dict, websocket: WebSocket | None, user: User):
         name="get_chats",
         body={
             "chats": chats
+        },
+        status_code=200,
+        error=None
+    )
+    await websocket_manager.send_personal_response(action, websocket)
+
+
+@error_catcher("remove_to_archive")
+@check_body_format(['chat_id'])
+async def answer_remove_to_archive(body: dict, websocket: WebSocket | None, user: User):
+    """
+    Ответ на запрос об отправке чата в архив.
+
+    :param body: Dict[]
+    :param websocket: Websocket
+    :param user: User
+    :return:
+    """
+    chat_id = body.get('chat_id')
+
+    await remove_to_archive(chat_id)
+
+    action = ActionDTOOut(
+        name="remove_to_archive",
+        body={
+            "chat_id": chat_id
         },
         status_code=200,
         error=None

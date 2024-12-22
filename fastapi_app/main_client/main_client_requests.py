@@ -243,3 +243,29 @@ async def get_chats_by_user(user_id: int) -> list[ExtChatDTO]:
         except Exception as e:
             print(f"Error: {e}")
             raise e
+
+
+
+@internal_router.post("/remove_to_archive", response_model=None)
+async def remove_to_archive(chat_id: int) -> None:
+    """
+    Отправляет чат в архив.
+
+    :param chat_id: int
+    :return: None
+    """
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/remove_to_archive",
+                                         json=chat_id)
+            response.raise_for_status()
+
+            return None
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e

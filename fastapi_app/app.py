@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, File, UploadFile, HTTPException
 from fastapi.responses import RedirectResponse
 from pydantic import ValidationError
 
@@ -20,9 +20,15 @@ from fastapi_app.auth.auth_schemes import UserRead, UserCreate
 from fastapi_app.auth.user_manager import get_user_manager
 
 from fastapi_app.auth.websocket_auth import websocket_auth_active
+from fastapi_app.auth.http_auth import http_auth_active
 
 from database.create_db import init_models
+from core.s3 import s3_client
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
+from core.config_reader import config
+
+import uuid
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -116,3 +122,28 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
                 logger.error("Unknown error: ", e)
     except WebSocketDisconnect:
         websocket_manager.disconnect(websocket, user.id)
+
+
+@app.post(app_config.INTERNAL_UPLOAD_FILE_PREFIX)
+async def upload_file_to_s3(file: UploadFile = File(...), user: User = Depends(http_auth_active)):
+    try:
+        # Чтение содержимого файла
+        file_content = await file.read()
+
+        file_name = str(uuid.uuid4())+"."+file.filename.split(".")[-1]
+
+        # Загружаем файл в S3
+        s3_client.put_object(
+            Bucket=config.S3_BUCKET_NAME,
+            Key=file_name,  # Используем имя файла
+            Body=file_content,
+            ContentType=file.content_type
+        )
+
+        return {"url": config.S3_BUCKET_URL+"/"+config.S3_BUCKET_NAME+"/"+file_name}
+    except NoCredentialsError:
+        raise HTTPException(status_code=500, detail="AWS credentials not found")
+    except PartialCredentialsError:
+        raise HTTPException(status_code=500, detail="Incomplete AWS credentials")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")

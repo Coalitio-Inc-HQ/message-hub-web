@@ -22,12 +22,16 @@ class Settings(BaseSettings):
     INTERNAL_WS_LISTENER_PREFIX: str
     INTERNAL_GET_MESSAGE_PREFIX: str
     INTERNAL_GET_NOTIFICATION_PREFIX: str
+    INTERNAL_UPLOAD_FILE_PREFIX:str
 
     SECRET_AUTH: str
 
     EXTERNAL_MAIN_BASE_URL: str
 
     S3_BUCKET_URL: str
+    S3_ACCESS_KEY_ID: str
+    S3_SECRET_ACCESS_KEY: str
+    S3_BUCKET_NAME: str
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(__file__), "../.env"))

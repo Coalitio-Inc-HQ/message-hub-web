@@ -11,6 +11,8 @@ from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO, ExtChatDTO
 from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat, \
     MainServerOfflineException
 
+import uuid
+
 internal_router = APIRouter(prefix=app_config.INTERNAL_ROUTER_PREFIX)
 
 logger = logging.getLogger(__name__)
@@ -168,18 +170,19 @@ async def get_messages_by_chat(
 
 
 @internal_router.post("/add_user_to_chat", response_model=ChatUsersDTO)
-async def add_user_to_chat(chat_id: int, user_id: int) -> ChatUsersDTO:
+async def add_user_to_chat(chat_id: int, user_id: int, event_id: uuid.UUID) -> ChatUsersDTO:
     """
     Подключает пользователя к ожидающему чату
 
     :param user_id: int
     :param chat_id: int
+    :param event_id: uuid
     :return: ChatUsersDTO
     """
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/connect_user_to_chat",
-                                         json={'user_id': user_id, 'chat_id': chat_id})
+                                         json={'user_id': user_id, 'chat_id': chat_id, 'event_id': event_id})
             response.raise_for_status()
             return ChatUsersDTO.model_validate(response.json())
         except ValidationError:
@@ -193,18 +196,22 @@ async def add_user_to_chat(chat_id: int, user_id: int) -> ChatUsersDTO:
 
 
 @internal_router.post("/send_a_message_to_chat")
-async def send_a_message_to_chat(message: MessageDTO):
+async def send_a_message_to_chat(message: MessageDTO, event_id: uuid.UUID):
     """
     Отправляет сообщение на главный сервер
 
     :param message: MessageDTO
+    :param event_id: UUID
     :return: None
     """
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post(
                 url="/message_service/send_a_message_to_chat",
-                json=message.model_dump(),
+                json={
+                    "message": message.model_dump(),
+                    "event_id": event_id,
+                },
                 timeout=3000
             )
             response.raise_for_status()
@@ -247,17 +254,18 @@ async def get_chats_by_user(user_id: int) -> list[ExtChatDTO]:
 
 
 @internal_router.post("/remove_to_archive", response_model=None)
-async def remove_to_archive(chat_id: int) -> None:
+async def remove_to_archive(chat_id: int, event_id: uuid.UUID) -> None:
     """
     Отправляет чат в архив.
 
     :param chat_id: int
+    :param event_id: UUID
     :return: None
     """
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/remove_to_archive",
-                                         json=chat_id)
+                                         json={"chat_id": chat_id, "event_id": event_id})
             response.raise_for_status()
 
             return None

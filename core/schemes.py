@@ -6,6 +6,8 @@ from fastapi import WebSocket
 from pydantic import BaseModel, Field
 from typing import  Any
 
+import uuid
+
 user_id = int
 chat_id = int
 message_id = int
@@ -112,3 +114,4 @@ class Event(BaseModel):
     """
     name: str
     data: Any
+    id: uuid.UUID

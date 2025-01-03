@@ -17,13 +17,15 @@ from core import MessageDTO, ActionsMapTypedDict, UserInfoDTO, ActionDTOOut,Mess
 
 from database.database_schemes import User
 
+import uuid
+
 logger = logging.getLogger(__name__)
 
 
 def get_websocket_response_actions() -> ActionsMapTypedDict:
     return ActionsMapTypedDict(
         get_user_info=answer_front_user_info,
-        get_chats_in_which_user_is_not_member=answer_front_get_chats_in_which_user_is_not_member,
+        # get_chats_in_which_user_is_not_member=answer_front_get_chats_in_which_user_is_not_member,
         get_chats_by_user=answer_front_chats_by_user,
         get_users_by_chat=answer_front_users_by_chat,
         get_messages_by_chat=answer_front_messages_from_chat,
@@ -56,28 +58,28 @@ async def answer_front_user_info(body: dict, websocket: WebSocket | None, user: 
     await websocket_manager.send_personal_response(action, websocket)
 
 
-@error_catcher("get_chats_in_which_user_is_not_member")
-@check_body_format([])
-async def answer_front_get_chats_in_which_user_is_not_member(body: dict, websocket: WebSocket | None, user: User):
-    """
-    Ответ на запрос о получении ожидающих чатов от фронта
+# @error_catcher("get_chats_in_which_user_is_not_member")
+# @check_body_format([])
+# async def answer_front_get_chats_in_which_user_is_not_member(body: dict, websocket: WebSocket | None, user: User):
+#     """
+#     Ответ на запрос о получении ожидающих чатов от фронта
 
-    :param body: Dict[count: int]
-    :param websocket: Websocket
-    :param user: User
-    :return:
-    """
+#     :param body: Dict[count: int]
+#     :param websocket: Websocket
+#     :param user: User
+#     :return:
+#     """
 
-    chats = await get_chats_in_which_user_is_not_member(user.id)
-    action = ActionDTOOut(
-        name="get_chats_in_which_user_is_not_member",
-        body={
-            "chats": chats
-        },
-        status_code=200,
-        error=None
-    )
-    await websocket_manager.send_personal_response(action, websocket)
+#     chats = await get_chats_in_which_user_is_not_member(user.id)
+#     action = ActionDTOOut(
+#         name="get_chats_in_which_user_is_not_member",
+#         body={
+#             "chats": chats
+#         },
+#         status_code=200,
+#         error=None
+#     )
+#     await websocket_manager.send_personal_response(action, websocket)
 
 
 @error_catcher("get_chats_by_user")
@@ -162,7 +164,7 @@ async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | Non
 
 
 @error_catcher("add_user_to_chat")
-@check_body_format(['chat_id', 'user_id'])
+@check_body_format(['chat_id', 'user_id', 'event_id'])
 async def answer_front_add_user_to_chat(body: dict, websocket: WebSocket | None, user: User):
     """
     Добавление пользователя к чату
@@ -174,16 +176,19 @@ async def answer_front_add_user_to_chat(body: dict, websocket: WebSocket | None,
     """
     chat_id = body.get('chat_id')
     user_id = body.get('user_id')
+    event_id = uuid.UUID(body.get('event_id'))
 
     chat_users = await add_user_to_chat(
         chat_id,
-        user_id
+        user_id,
+        event_id,
     )
 
     action = ActionDTOOut(
         name="add_user_to_chat",
         body={
-            "chat_users": chat_users
+            "chat_users": chat_users,
+            "event_id": event_id,
         },
         status_code=200,
         error=None
@@ -192,7 +197,7 @@ async def answer_front_add_user_to_chat(body: dict, websocket: WebSocket | None,
 
 
 @error_catcher("send_message_to_chat")
-@check_body_format(['message'])
+@check_body_format(['message', 'event_id'])
 async def process_front_message_to_chat(body: dict, websocket: WebSocket | None, user: User):
     """
     Обработчик отправки сообщения в чат из фронта
@@ -203,18 +208,20 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None,
     :return:
     """
 
+    event_id = uuid.UUID(body.get('event_id'))
     message = body.get('message')
     message = MessageDTOFront(**message)
     message.sender_id = user.id
     message.sended_at = datetime.datetime.now().isoformat()
 
-    res = await send_a_message_to_chat(MessageDTO.model_validate(message,from_attributes=True))
+    res = await send_a_message_to_chat(MessageDTO.model_validate(message,from_attributes=True), event_id)
     action = ActionDTOOut(
         name="send_message_to_chat",
         body={
             "message_id": res["message_id"],
             "front_message_id": message.front_message_id,
-            "chat_id": message.chat_id
+            "chat_id": message.chat_id,
+            "event_id":event_id,
         },
         status_code=200,
         error=None
@@ -260,13 +267,15 @@ async def answer_remove_to_archive(body: dict, websocket: WebSocket | None, user
     :return:
     """
     chat_id = body.get('chat_id')
+    event_id = uuid.UUID(body.get('event_id'))
 
-    await remove_to_archive(chat_id)
+    await remove_to_archive(chat_id, event_id)
 
     action = ActionDTOOut(
         name="remove_to_archive",
         body={
-            "chat_id": chat_id
+            "chat_id": chat_id,
+            "event_id": event_id,
         },
         status_code=200,
         error=None

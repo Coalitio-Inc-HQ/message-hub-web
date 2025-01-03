@@ -35,9 +35,9 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
         remove_to_archive = answer_remove_to_archive,
     )
 
-
+@error_catcher("get_user_info")
 @check_body_format([])
-async def answer_front_user_info(body: dict, websocket: WebSocket | None, user: User):
+async def answer_front_user_info(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
     """
     Ответ на запрос о получении информации о текущем пользователе
 
@@ -47,6 +47,7 @@ async def answer_front_user_info(body: dict, websocket: WebSocket | None, user: 
     :return:
     """
     action = ActionDTOOut(
+        id=id,
         name="get_user_info",
         body={
             "user_info": UserInfoDTO.model_validate(user, from_attributes=True)
@@ -84,7 +85,7 @@ async def answer_front_user_info(body: dict, websocket: WebSocket | None, user: 
 
 @error_catcher("get_chats_by_user")
 @check_body_format([])
-async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None, user: User):
+async def answer_front_chats_by_user(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
     """
     Ответ на запрос о получении чатов пользователя от фронта.
 
@@ -98,6 +99,7 @@ async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None, us
     await websocket_manager.connect_user_to_chats(user.id, [chat['id'] for chat in chats])
 
     action = ActionDTOOut(
+        id=id,
         name="get_chats_by_user",
         body={
             "chats": chats
@@ -110,7 +112,7 @@ async def answer_front_chats_by_user(body: dict, websocket: WebSocket | None, us
 
 @error_catcher("get_users_by_chat")
 @check_body_format(['chat_id'])
-async def answer_front_users_by_chat(body: dict, websocket: WebSocket | None, user: User):
+async def answer_front_users_by_chat(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
     """
     Ответ на запрос о получении пользователей чата от фронта.
 
@@ -123,6 +125,7 @@ async def answer_front_users_by_chat(body: dict, websocket: WebSocket | None, us
     users = await get_users_by_chat(chat_id)
 
     action = ActionDTOOut(
+        id=id,
         name="get_users_by_chat",
         body={
             "chat_id": chat_id,
@@ -137,7 +140,7 @@ async def answer_front_users_by_chat(body: dict, websocket: WebSocket | None, us
 
 @error_catcher("get_messages_by_chat")
 @check_body_format(['chat_id', 'count', 'offset_message_id','include_messege','mode'])
-async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | None, user: User):
+async def answer_front_messages_from_chat(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
     """
     Ответ на запрос о получении сообщений в чате от фронта.
 
@@ -154,6 +157,7 @@ async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | Non
     messages = await get_messages_by_chat(chat_id, count, offset_message_id, include_messege, mode)
 
     action = ActionDTOOut(
+        id=id,
         name="get_messages_by_chat",
         body={
             "messages": messages
@@ -167,7 +171,7 @@ async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | Non
 
 @error_catcher("add_user_to_chat")
 @check_body_format(['chat_id', 'user_id', 'event_id'])
-async def answer_front_add_user_to_chat(body: dict, websocket: WebSocket | None, user: User):
+async def answer_front_add_user_to_chat(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
     """
     Добавление пользователя к чату
 
@@ -187,6 +191,7 @@ async def answer_front_add_user_to_chat(body: dict, websocket: WebSocket | None,
     )
 
     action = ActionDTOOut(
+        id=id,
         name="add_user_to_chat",
         body={
             "chat_users": chat_users,
@@ -200,7 +205,7 @@ async def answer_front_add_user_to_chat(body: dict, websocket: WebSocket | None,
 
 @error_catcher("send_message_to_chat")
 @check_body_format(['message', 'event_id'])
-async def process_front_message_to_chat(body: dict, websocket: WebSocket | None, user: User):
+async def process_front_message_to_chat(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
     """
     Обработчик отправки сообщения в чат из фронта
 
@@ -218,6 +223,7 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None,
 
     res = await send_a_message_to_chat(MessageDTO.model_validate(message,from_attributes=True), event_id)
     action = ActionDTOOut(
+        id=id,
         name="send_message_to_chat",
         body={
             "message_id": res["message_id"],
@@ -233,7 +239,7 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None,
 
 @error_catcher("get_chats")
 @check_body_format([])
-async def answer_get_chats(body: dict, websocket: WebSocket | None, user: User):
+async def answer_get_chats(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
     """
     Ответ на запрос о получении чатов пользователя от фронта.
 
@@ -247,6 +253,7 @@ async def answer_get_chats(body: dict, websocket: WebSocket | None, user: User):
     await websocket_manager.connect_user_to_chats(user.id, [chat['id'] for chat in chats])
 
     action = ActionDTOOut(
+        id=id,
         name="get_chats",
         body={
             "chats": chats
@@ -259,7 +266,7 @@ async def answer_get_chats(body: dict, websocket: WebSocket | None, user: User):
 
 @error_catcher("remove_to_archive")
 @check_body_format(['chat_id'])
-async def answer_remove_to_archive(body: dict, websocket: WebSocket | None, user: User):
+async def answer_remove_to_archive(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
     """
     Ответ на запрос об отправке чата в архив.
 
@@ -274,6 +281,7 @@ async def answer_remove_to_archive(body: dict, websocket: WebSocket | None, user
     await remove_to_archive(chat_id, event_id)
 
     action = ActionDTOOut(
+        id=id,
         name="remove_to_archive",
         body={
             "chat_id": chat_id,

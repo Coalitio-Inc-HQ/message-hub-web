@@ -13,6 +13,8 @@ from httpx import HTTPStatusError
 
 from fastapi_app.websocket_manager import websocket_manager
 
+import uuid
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,11 +28,11 @@ def get_list_of_pydantic_objects(base_model: BaseModel, list_of_elements: list) 
 
 def check_body_format(keys: list[str]):
     def wrapper(func):
-        def inner(body: dict, websocket: WebSocket | None, user: User):
+        async def inner(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
             if not all(key in body.keys() for key in keys):
                 raise WrongBodyFormatException(
                     f"Неверный формат body в запросе. Не достает одного из ключей: {','.join(keys)}")
-            result = func(body, websocket, user)
+            result = await func(id, body, websocket, user)
             return result
 
         return inner
@@ -40,12 +42,13 @@ def check_body_format(keys: list[str]):
 
 def error_catcher(name: str):
     def wrapper(func):
-        async def inner(body: dict, websocket: WebSocket | None, user: User):
+        async def inner(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
             try:
-                result = await func(body, websocket, user)
+                result = await func(id, body, websocket, user)
                 return result
             except ValueError:
                 action = ActionDTOOut(
+                    id=id,
                     name=name,
                     body={},
                     status_code=500,
@@ -55,6 +58,7 @@ def error_catcher(name: str):
             except HTTPStatusError as err:
                 if 400 <= err.response.status_code < 500:
                     action = ActionDTOOut(
+                        id=id,
                         name=name,
                         body={},
                         status_code=422,
@@ -63,6 +67,7 @@ def error_catcher(name: str):
                     await websocket_manager.send_personal_response(action, websocket)
                 else:
                     action = ActionDTOOut(
+                        id=id,
                         name=name,
                         body={},
                         status_code=500,
@@ -71,6 +76,7 @@ def error_catcher(name: str):
                     await websocket_manager.send_personal_response(action, websocket)
             except WrongBodyFormatException as err:
                 action = ActionDTOOut(
+                    id=id,
                     name=name,
                     body={},
                     status_code=422,
@@ -79,6 +85,7 @@ def error_catcher(name: str):
                 await websocket_manager.send_personal_response(action, websocket)
             except Exception as e:
                 action = ActionDTOOut(
+                    id=id,
                     name=name,
                     body={},
                     status_code=500,

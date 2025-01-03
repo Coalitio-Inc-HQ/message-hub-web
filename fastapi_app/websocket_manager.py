@@ -69,7 +69,7 @@ class ConnectionManager:
 
     @staticmethod
     async def send_personal_response(action: ActionDTOOut, websocket: WebSocket):
-        await websocket.send_json(action.model_dump())
+        await websocket.send_json(action.model_dump(mode="json"))
 
     async def broadcast(self, action: ActionDTO):
         """
@@ -84,7 +84,7 @@ class ConnectionManager:
 
         for key, user_connection in self.active_connections.items():
             for connection in user_connection:
-                await connection.send_json(action.model_dump())
+                await connection.send_json(action.model_dump(mode="json"))
 
     async def send_to_chat(self, action: ActionDTO, chat_id: int):
         """
@@ -98,7 +98,7 @@ class ConnectionManager:
         if chat_id in self.active_chat_connections:
             for user_connection_id in self.active_chat_connections[chat_id]:
                 for connection in self.active_connections[user_connection_id]:
-                    await connection.send_json(action.model_dump())
+                    await connection.send_json(action.model_dump(mode="json"))
 
     async def send_to_user_by_user_id(self, action: ActionDTO, user_id: int):
         """
@@ -110,6 +110,6 @@ class ConnectionManager:
         """
         if user_id in self.active_connections:
             for connection in self.active_connections[user_id]:
-                await connection.send_json(action.model_dump())
+                await connection.send_json(action.model_dump(mode="json"))
 
 websocket_manager = ConnectionManager()

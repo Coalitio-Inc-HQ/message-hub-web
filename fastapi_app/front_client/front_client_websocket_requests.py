@@ -3,6 +3,8 @@ import logging
 from core import ActionDTO, MessageDTO, ChatDTO, UserDTO, Event
 from fastapi_app.websocket_manager import websocket_manager
 
+import uuid
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,6 +21,7 @@ async def handler_from_main_chat_update(event: Event):
     Обновлено состояние чата
     """
     action = ActionDTO(
+        id=uuid.uuid4(),
         name="chat.update",
         body={
             "chat": event.data["chat"],
@@ -32,6 +35,7 @@ async def handler_from_main_new_message_in_chat(event: Event):
     """
     message = MessageDTO.model_validate(event.data["message"])
     action = ActionDTO(
+        id=uuid.uuid4(),
         name="chat.new_message",
         body={
             "message": message.model_dump(),
@@ -47,6 +51,7 @@ async def handler_from_main_new_user_in_chat(event: Event):
     user = UserDTO.model_validate(event.data["user"])
 
     action = ActionDTO(
+        id=uuid.uuid4(),
         name="chat.add.user",
         body={
             'chat': chat.model_dump(),
@@ -60,6 +65,7 @@ async def handler_from_main_set_last_read_message_id(event: Event):
     Отдача информации об установленом последнем прочитанном сообщенеии
     """
     action = ActionDTO(
+        id=uuid.uuid4(),
         name="chat.set.last_read_message_id",
         body={
             "chat_id": event.data["chat_id"],

@@ -34,6 +34,7 @@ class ActionDTO(BaseModel):
     """
     name: name
     body: dict
+    id: uuid.UUID
 
 
 class ActionDTOOut(ActionDTO):

@@ -99,9 +99,10 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
                 print(data)
                 action = ActionDTO(**data)
                 if response_actions_map.__contains__(action.name):
-                    await response_actions_map[action.name](action.body, websocket, user)
+                    await response_actions_map[action.name](action.id, action.body, websocket, user)
                 else:
                     err_action = ActionDTOOut(
+                        id=action.id,
                         name=action.name,
                         body={},
                         status_code=422,
@@ -110,6 +111,7 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
                     await websocket_manager.send_personal_response(err_action, websocket)
             except ValidationError:
                 action = ActionDTOOut(
+                    id=uuid.uuid4(),
                     name="undefined",
                     body={},
                     status_code=422,

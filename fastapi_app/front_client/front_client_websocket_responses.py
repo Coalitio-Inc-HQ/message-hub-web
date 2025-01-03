@@ -136,7 +136,7 @@ async def answer_front_users_by_chat(body: dict, websocket: WebSocket | None, us
 
 
 @error_catcher("get_messages_by_chat")
-@check_body_format(['chat_id', 'count', 'offset_message_id'])
+@check_body_format(['chat_id', 'count', 'offset_message_id','include_messege','mode'])
 async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | None, user: User):
     """
     Ответ на запрос о получении сообщений в чате от фронта.
@@ -149,7 +149,9 @@ async def answer_front_messages_from_chat(body: dict, websocket: WebSocket | Non
     chat_id = body.get('chat_id')
     count = body.get('count')
     offset_message_id = body.get('offset_message_id')
-    messages = await get_messages_by_chat(chat_id, count, offset_message_id)
+    include_messege = body.get('include_messege')
+    mode = body.get('mode')
+    messages = await get_messages_by_chat(chat_id, count, offset_message_id, include_messege, mode)
 
     action = ActionDTOOut(
         name="get_messages_by_chat",
@@ -188,7 +190,7 @@ async def answer_front_add_user_to_chat(body: dict, websocket: WebSocket | None,
         name="add_user_to_chat",
         body={
             "chat_users": chat_users,
-            "event_id": event_id,
+            "event_id": str(event_id),
         },
         status_code=200,
         error=None
@@ -221,7 +223,7 @@ async def process_front_message_to_chat(body: dict, websocket: WebSocket | None,
             "message_id": res["message_id"],
             "front_message_id": message.front_message_id,
             "chat_id": message.chat_id,
-            "event_id":event_id,
+            "event_id": str(event_id),
         },
         status_code=200,
         error=None
@@ -275,7 +277,7 @@ async def answer_remove_to_archive(body: dict, websocket: WebSocket | None, user
         name="remove_to_archive",
         body={
             "chat_id": chat_id,
-            "event_id": event_id,
+            "event_id": str(event_id),
         },
         status_code=200,
         error=None

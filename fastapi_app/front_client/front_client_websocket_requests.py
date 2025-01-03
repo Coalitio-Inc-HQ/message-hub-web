@@ -22,7 +22,7 @@ async def handler_from_main_chat_update(event: Event):
         name="chat.update",
         body={
             "chat": event.data["chat"],
-            "event_id": event.id,
+            "event_id": str(event.id),
         })
     await websocket_manager.broadcast(action)
 
@@ -35,7 +35,7 @@ async def handler_from_main_new_message_in_chat(event: Event):
         name="chat.new_message",
         body={
             "message": message.model_dump(),
-            "event_id": event.id,
+            "event_id": str(event.id),
         })
     await websocket_manager.broadcast(action)
 
@@ -51,7 +51,7 @@ async def handler_from_main_new_user_in_chat(event: Event):
         body={
             'chat': chat.model_dump(),
             'user': user.model_dump(),
-            "event_id": event.id,
+            "event_id": str(event.id),
         })
     await websocket_manager.broadcast(action)
 
@@ -65,7 +65,7 @@ async def handler_from_main_set_last_read_message_id(event: Event):
             "chat_id": event.data["chat_id"],
             "user_id": event.data["user_id"],
             "last_read_message_id": event.data["last_read_message_id"],
-            "event_id": event.id,
+            "event_id": str(event.id),
         })
     await websocket_manager.send_to_user_by_user_id(action, event.data["user_id"])
 

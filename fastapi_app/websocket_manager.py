@@ -15,7 +15,7 @@ class ConnectionManager:
 
     async def connect(self, websocket: WebSocket, user_id: int):
         await websocket.accept()
-        if self.active_connections[user_id]:
+        if user_id in self.active_connections:
             self.active_connections[user_id].append(websocket)
         else:
             self.active_connections[user_id] = [websocket]
@@ -82,7 +82,7 @@ class ConnectionManager:
         :return:
         """
 
-        for user_connection in self.active_connections:
+        for key, user_connection in self.active_connections.items():
             for connection in user_connection:
                 await connection.send_json(action.model_dump())
 

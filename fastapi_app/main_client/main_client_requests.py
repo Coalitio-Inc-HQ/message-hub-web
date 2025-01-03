@@ -11,6 +11,8 @@ from core import ChatDTO, MessageDTO, UserDTO, ChatUsersDTO, ExtChatDTO
 from core import WrongResponseFormatFromMainException, MainServerWrongUrlException, MainServerWrongJsonFormat, \
     MainServerOfflineException
 
+from typing import Literal
+
 import uuid
 
 internal_router = APIRouter(prefix=app_config.INTERNAL_ROUTER_PREFIX)
@@ -138,14 +140,19 @@ async def get_users_by_chat(chat_id: int) -> list[UserDTO]:
 @internal_router.post("/get_messages_by_chat", response_model=list[MessageDTO])
 async def get_messages_by_chat(
         chat_id: int,
-        count: int = 50,
-        offset_message_id: int = -1) -> list[MessageDTO]:
+        count: int,
+        offset_message_id: int,
+        include_messege: bool, 
+        mode: Literal["up","down"],
+        ) -> list[MessageDTO]:
     """
     Получает сообщения из чата с главного сервера
 
     :param chat_id: int
     :param count: int
     :param offset_message_id: int
+    :param include_messege: bool
+    :param mode: Literal["up","down"]
     :return: list[MessageDTO]
     """
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
@@ -154,7 +161,9 @@ async def get_messages_by_chat(
                                          json={
                                              'chat_id': chat_id,
                                              'count': count,
-                                             'offset_message_id': offset_message_id
+                                             'offset_message_id': offset_message_id,
+                                             'include_messege': include_messege,
+                                             'mode': mode,
                                          })
             response.raise_for_status()
 
@@ -182,7 +191,7 @@ async def add_user_to_chat(chat_id: int, user_id: int, event_id: uuid.UUID) -> C
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/connect_user_to_chat",
-                                         json={'user_id': user_id, 'chat_id': chat_id, 'event_id': event_id})
+                                         json={'user_id': user_id, 'chat_id': chat_id, 'event_id': str(event_id)})
             response.raise_for_status()
             return ChatUsersDTO.model_validate(response.json())
         except ValidationError:
@@ -210,7 +219,7 @@ async def send_a_message_to_chat(message: MessageDTO, event_id: uuid.UUID):
                 url="/message_service/send_a_message_to_chat",
                 json={
                     "message": message.model_dump(),
-                    "event_id": event_id,
+                    "event_id":str(event_id),
                 },
                 timeout=3000
             )
@@ -265,7 +274,7 @@ async def remove_to_archive(chat_id: int, event_id: uuid.UUID) -> None:
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/remove_to_archive",
-                                         json={"chat_id": chat_id, "event_id": event_id})
+                                         json={"chat_id": chat_id, "event_id": str(event_id)})
             response.raise_for_status()
 
             return None

@@ -122,6 +122,8 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
                 logger.error("Unknown error: ", e)
     except WebSocketDisconnect:
         websocket_manager.disconnect(websocket, user.id)
+    except Exception:
+        websocket_manager.disconnect(websocket, user.id)
 
 
 @app.post(app_config.INTERNAL_UPLOAD_FILE_PREFIX)

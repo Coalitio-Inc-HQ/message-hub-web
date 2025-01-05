@@ -87,8 +87,8 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
     :param websocket: Websocket
     :return:
     """
-    await websocket_manager.connect(websocket, user.id)
     try:
+        await websocket_manager.connect(websocket, user.id)
         # Получаем карту методов для ответов фронту
         response_actions_map = get_websocket_response_actions()
 

@@ -74,7 +74,7 @@ class MessageDTO(BaseModel):
     sender_id: user_id
     # sent_at: datetime.datetime | str
     sended_at: datetime.datetime | str
-    text: str | None
+    text: str | None = None
     attachments: dict
 
 class MessageDTOFront(MessageDTO):

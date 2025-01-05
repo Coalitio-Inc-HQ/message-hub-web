@@ -46,7 +46,7 @@ def error_catcher(name: str):
             try:
                 result = await func(id, body, websocket, user)
                 return result
-            except ValueError:
+            except ValueError as e:
                 action = ActionDTOOut(
                     id=id,
                     name=name,

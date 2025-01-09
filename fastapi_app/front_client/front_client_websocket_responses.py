@@ -160,7 +160,10 @@ async def answer_front_messages_from_chat(id: uuid.UUID, body: dict, websocket: 
         id=id,
         name="get_messages_by_chat",
         body={
-            "messages": messages
+            "messages": messages,
+            "offset_message_id":offset_message_id,
+            "include_messege": include_messege,
+            "mode": mode,
         },
         status_code=200,
         error=None

@@ -92,6 +92,7 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
         # Получаем карту методов для ответов фронту
         response_actions_map = get_websocket_response_actions()
 
+        # websocket.state
         while True:
             try:
                 # Получаем данные от фронта в формате ActionDTO
@@ -119,6 +120,9 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(websocke
                 )
                 await websocket_manager.send_personal_response(action, websocket)
             except WebSocketDisconnect as e:
+                raise e
+            except RuntimeError as e:
+                logger.error("RuntimeError: ", e)
                 raise e
             except Exception as e:
                 logger.error("Unknown error: ", e)

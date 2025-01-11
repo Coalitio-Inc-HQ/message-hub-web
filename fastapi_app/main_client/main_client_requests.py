@@ -286,3 +286,36 @@ async def remove_to_archive(chat_id: int, event_id: uuid.UUID) -> None:
         except Exception as e:
             print(f"Error: {e}")
             raise e
+
+@internal_router.post("/set_last_read_message_id", response_model=None)
+async def set_last_read_message_id(chat_id: int, user_id: int, last_read_message_id: int, event_id: uuid.UUID):
+    """
+    Устанавливает последнее прочитанное сообщение в чате.
+
+    :param chat_id: int
+    :param user_id: int
+    :param last_read_message_id: int
+    :param event_id: UUID
+    :return: None
+    """
+
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/set_last_read_message_id",
+                                         json={
+                                            "chat_id": chat_id, 
+                                            "user_id": user_id,
+                                            "last_read_message_id": last_read_message_id,
+                                            "event_id": str(event_id)
+                                            })
+            response.raise_for_status()
+
+            return None
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e

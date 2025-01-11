@@ -71,6 +71,7 @@ async def handler_from_main_set_last_read_message_id(event: Event):
             "chat_id": event.data["chat_id"],
             "user_id": event.data["user_id"],
             "last_read_message_id": event.data["last_read_message_id"],
+            "count": event.data["count"],
             "event_id": str(event.id),
         })
     await websocket_manager.send_to_user_by_user_id(action, event.data["user_id"])

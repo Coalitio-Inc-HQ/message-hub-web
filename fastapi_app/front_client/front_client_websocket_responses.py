@@ -8,7 +8,7 @@ from fastapi_app.main_client.main_client_requests import get_chats_by_user
 from fastapi_app.main_client.main_client_requests import get_users_by_chat
 from fastapi_app.main_client.main_client_requests import get_messages_by_chat
 from fastapi_app.main_client.main_client_requests import add_user_to_chat
-from fastapi_app.main_client.main_client_requests import send_a_message_to_chat, remove_to_archive
+from fastapi_app.main_client.main_client_requests import send_a_message_to_chat, remove_to_archive, set_last_read_message_id
 from fastapi_app.utils import check_body_format, error_catcher
 
 from fastapi_app.websocket_manager import websocket_manager
@@ -33,6 +33,7 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
         send_message_to_chat=process_front_message_to_chat,
         get_chats = answer_get_chats,
         remove_to_archive = answer_remove_to_archive,
+        set_last_read_message_id = answer_set_last_read_message_id,
     )
 
 @error_catcher("get_user_info")
@@ -160,6 +161,7 @@ async def answer_front_messages_from_chat(id: uuid.UUID, body: dict, websocket: 
         id=id,
         name="get_messages_by_chat",
         body={
+            "chat_id":chat_id,
             "messages": messages,
             "offset_message_id":offset_message_id,
             "include_messege": include_messege,
@@ -288,6 +290,36 @@ async def answer_remove_to_archive(id: uuid.UUID, body: dict, websocket: WebSock
         name="remove_to_archive",
         body={
             "chat_id": chat_id,
+            "event_id": str(event_id),
+        },
+        status_code=200,
+        error=None
+    )
+    await websocket_manager.send_personal_response(action, websocket)
+
+@error_catcher("set_last_read_message_id")
+@check_body_format(['chat_id','last_read_message_id','event_id'])
+async def answer_set_last_read_message_id (id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
+    """
+    Ответ на запрос на установку последнего прочитанного сообщения.
+
+    :param body: Dict[]
+    :param websocket: Websocket
+    :param user: User
+    :return:
+    """
+    chat_id = body.get('chat_id')
+    event_id = uuid.UUID(body.get('event_id'))
+    last_read_message_id = body.get('last_read_message_id')
+
+    await set_last_read_message_id(chat_id, user.id, last_read_message_id, event_id)
+
+    action = ActionDTOOut(
+        id=id,
+        name="set_last_read_message_id",
+        body={
+            "chat_id": chat_id,
+            "last_read_message_id": last_read_message_id,
             "event_id": str(event_id),
         },
         status_code=200,

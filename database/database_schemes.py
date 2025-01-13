@@ -26,9 +26,13 @@ class User(Base):
                                            nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+
+class AdminUser(Base):
+    __tablename__ = "admin_user"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    login: Mapped[str_256] = mapped_column(CheckConstraint("login != ''"))
+    hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=False)
 
 async def get_user_db(session: AsyncSession = Depends(get_session)):
     yield SQLAlchemyUserDatabase(session, User)

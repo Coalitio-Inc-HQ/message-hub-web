@@ -28,6 +28,8 @@ from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
 from core.config_reader import config
 
+from httpx import AsyncClient
+
 import uuid
 
 @asynccontextmanager
@@ -140,13 +142,18 @@ async def upload_file_to_s3(file: UploadFile = File(...), user: User = Depends(h
 
         file_name = str(uuid.uuid4())+"."+file.filename.split(".")[-1]
 
-        # Загружаем файл в S3
-        s3_client.put_object(
-            Bucket=config.S3_BUCKET_NAME,
-            Key=file_name,  # Используем имя файла
-            Body=file_content,
-            ContentType=file.content_type
-        )
+        # # Загружаем файл в S3
+        # s3_client.put_object(
+        #     Bucket=config.S3_BUCKET_NAME,
+        #     Key=file_name,  # Используем имя файла
+        #     Body=file_content,
+        #     ContentType=file.content_type
+        # )
+
+        async with AsyncClient() as client:
+            response = await client.put(url=config.S3_BUCKET_URL+"/"+config.S3_BUCKET_NAME+"/"+file_name,data=file_content)
+            response.raise_for_status()
+
 
         return {"url": config.S3_BUCKET_URL+"/"+config.S3_BUCKET_NAME+"/"+file_name}
     except NoCredentialsError:

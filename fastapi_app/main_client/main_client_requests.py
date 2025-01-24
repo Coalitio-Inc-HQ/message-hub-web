@@ -319,3 +319,25 @@ async def set_last_read_message_id(chat_id: int, user_id: int, last_read_message
         except Exception as e:
             print(f"Error: {e}")
             raise e
+
+
+@internal_router.post("/get_platforms", response_model=None)
+async def get_platforms():
+    """
+    Получает существующие платформы.
+    """
+
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/get_platforms",)
+            response.raise_for_status()
+
+            return response.json()
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e

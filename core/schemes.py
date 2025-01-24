@@ -16,6 +16,10 @@ name = str
 body = dict
 websocket = WebSocket
 
+class OutPlatformDTO(BaseModel):
+    id: int
+    platform_name: str = Field(max_length=30)
+
 
 class ErrorDTO(BaseModel):
     """
@@ -58,13 +62,14 @@ class ChatDTO(BaseModel):
     is_archive: bool
     icon_url: str | None = Field(max_length=256)
     last_message_send_at: datetime.datetime| None = None
+    platform_id: int|None = None
 
 
 class ExtChatDTO(ChatDTO):
     last_read_message_id: int | None = None
     count_unredeble_messgaes: int | None = None
     user_in_chat: bool = False
-
+    platform_name: str|None = None
 
 
 class MessageDTO(BaseModel):

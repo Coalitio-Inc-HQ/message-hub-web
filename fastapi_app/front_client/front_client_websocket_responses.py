@@ -8,7 +8,7 @@ from fastapi_app.main_client.main_client_requests import get_chats_by_user
 from fastapi_app.main_client.main_client_requests import get_users_by_chat
 from fastapi_app.main_client.main_client_requests import get_messages_by_chat
 from fastapi_app.main_client.main_client_requests import add_user_to_chat
-from fastapi_app.main_client.main_client_requests import send_a_message_to_chat, remove_to_archive, set_last_read_message_id
+from fastapi_app.main_client.main_client_requests import send_a_message_to_chat, remove_to_archive, set_last_read_message_id, get_platforms
 from fastapi_app.utils import check_body_format, error_catcher
 
 from fastapi_app.websocket_manager import websocket_manager
@@ -34,6 +34,7 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
         get_chats = answer_get_chats,
         remove_to_archive = answer_remove_to_archive,
         set_last_read_message_id = answer_set_last_read_message_id,
+        get_platforms = answer_front_get_platforms,
     )
 
 @error_catcher("get_user_info")
@@ -321,6 +322,31 @@ async def answer_set_last_read_message_id (id: uuid.UUID, body: dict, websocket:
             "chat_id": chat_id,
             "last_read_message_id": last_read_message_id,
             "event_id": str(event_id),
+        },
+        status_code=200,
+        error=None
+    )
+    await websocket_manager.send_personal_response(action, websocket)
+
+@error_catcher("answer_front_get_platforms")
+@check_body_format([])
+async def answer_front_get_platforms (id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
+    """
+    Ответ на запрос получения платформ.
+
+    :param body: Dict[]
+    :param websocket: Websocket
+    :param user: User
+    :return:
+    """
+
+    platforms = await get_platforms()
+
+    action = ActionDTOOut(
+        id=id,
+        name="get_platforms",
+        body={
+            "platforms": platforms,
         },
         status_code=200,
         error=None

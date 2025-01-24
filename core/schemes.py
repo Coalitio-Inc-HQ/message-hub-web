@@ -57,6 +57,7 @@ class ChatDTO(BaseModel):
     is_waiting_answer: bool
     is_archive: bool
     icon_url: str | None = Field(max_length=256)
+    last_message_send_at: datetime.datetime| None = None
 
 
 class ExtChatDTO(ChatDTO):

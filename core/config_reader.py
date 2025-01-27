@@ -11,6 +11,14 @@ class Settings(BaseSettings):
     DB_NAME: str
     DB_ECHO: bool
 
+    APP_HOST: str
+    APP_PORT: int
+
+    BACKEND_CORS_ORIGINS: str
+    @property
+    def BACKEND_CORS_ORIGINS(self):
+        return self.BACKEND_CORS_ORIGINS.split(",")
+
     LOG_FILE_PATH: str
 
     @property

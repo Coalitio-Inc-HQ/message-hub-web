@@ -9,7 +9,7 @@ if __name__ == "__main__":
     install_admin(app)
     
     try:
-        uvicorn.run(app, host=config.APP_HOST, port=config.APP_PORT)
+        uvicorn.run(app, host=config.APP_HOST, port=config.APP_PORT, forwarded_allow_ips="*", proxy_headers=True)
     except KeyboardInterrupt:
         logger.debug("Приложение успешно остановлено")
     

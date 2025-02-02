@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     S3_SECRET_ACCESS_KEY: str
     S3_BUCKET_NAME: str
 
+    API_KEY: str | None
+    OUT_API_KEY: str | None
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(__file__), "../.env"))
 

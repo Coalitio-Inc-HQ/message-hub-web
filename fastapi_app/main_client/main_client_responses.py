@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from core import app_config, MessageDTO, ChatDTO, UserDTO, Event
 from fastapi_app.front_client.front_client_websocket_requests import trigger_front_new_message_in_chat, \
@@ -10,6 +10,7 @@ from  fastapi_app.front_client.front_client_websocket_requests import get_websoc
 
 webhooks_router = APIRouter(prefix=app_config.INTERNAL_GET_MESSAGE_PREFIX)
 
+from core.auth import verify_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 @webhooks_router.post("/event")
-async def receive_event(event: Event):
+async def receive_event(event: Event, api_key: str = Depends(verify_api_key)):
     await get_websocket_event_handlers()[event.name](event)
     return {"ok": True}
 

@@ -15,6 +15,8 @@ from typing import Literal
 
 import uuid
 
+from core.config_reader import config
+
 internal_router = APIRouter(prefix=app_config.INTERNAL_ROUTER_PREFIX)
 
 logger = logging.getLogger(__name__)
@@ -35,7 +37,9 @@ async def register_platform(url: str = app_config.INTERNAL_BASE_DOMAIN):
                                          json={
                                              "platform_name": "web",
                                              "url": url
-                                         })
+                                         },
+                                         headers={"API-KEY": config.OUT_API_KEY}
+                                         )
             logger.info(response.text)
         except httpx.ReadTimeout:
             raise MainServerOfflineException("Главный сервер не в сети. Время ожидания ответа превышено")
@@ -52,7 +56,8 @@ async def register_user(name: str, platform_name: str = "web") -> dict:
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/user_registration/web",
-                                         json={"platform_name": platform_name, "name": name})
+                                         json={"platform_name": platform_name, "name": name},
+                                         headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
             return response.json()
         except HTTPException as e:
@@ -73,7 +78,8 @@ async def get_chats_in_which_user_is_not_member(user_id: int) -> list[ChatDTO]:
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/get_chats_in_which_user_is_not_member",
-                                         json=user_id)
+                                         json=user_id,
+                                         headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
 
             return response.json()
@@ -98,7 +104,8 @@ async def get_chats_by_user(user_id: int) -> list[ChatDTO]:
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/get_chats_by_user",
-                                         json=user_id)
+                                         json=user_id,
+                                         headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
 
             return  response.json()
@@ -123,7 +130,8 @@ async def get_users_by_chat(chat_id: int) -> list[UserDTO]:
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/get_users_by_chat_id",
-                                         json=chat_id)
+                                         json=chat_id,
+                                         headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
 
             return response.json()
@@ -164,7 +172,8 @@ async def get_messages_by_chat(
                                              'offset_message_id': offset_message_id,
                                              'include_messege': include_messege,
                                              'mode': mode,
-                                         })
+                                         },
+                                         headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
 
             return response.json()
@@ -191,7 +200,8 @@ async def add_user_to_chat(chat_id: int, user_id: int, event_id: uuid.UUID) -> C
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/connect_user_to_chat",
-                                         json={'user_id': user_id, 'chat_id': chat_id, 'event_id': str(event_id)})
+                                         json={'user_id': user_id, 'chat_id': chat_id, 'event_id': str(event_id)},
+                                         headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
             return ChatUsersDTO.model_validate(response.json())
         except ValidationError:
@@ -221,6 +231,7 @@ async def send_a_message_to_chat(message: MessageDTO, event_id: uuid.UUID):
                     "message": message.model_dump(),
                     "event_id":str(event_id),
                 },
+                headers={"API-KEY": config.OUT_API_KEY},
                 timeout=3000
             )
             response.raise_for_status()
@@ -247,7 +258,8 @@ async def get_chats_by_user(user_id: int) -> list[ExtChatDTO]:
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/get_chats",
-                                         json=user_id)
+                                         json=user_id,
+                                         headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
 
             return response.json()
@@ -274,7 +286,8 @@ async def remove_to_archive(chat_id: int, event_id: uuid.UUID) -> None:
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/remove_to_archive",
-                                         json={"chat_id": chat_id, "event_id": str(event_id)})
+                                         json={"chat_id": chat_id, "event_id": str(event_id)},
+                                         headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
 
             return None
@@ -307,7 +320,8 @@ async def set_last_read_message_id(chat_id: int, user_id: int, last_read_message
                                             "user_id": user_id,
                                             "last_read_message_id": last_read_message_id,
                                             "event_id": str(event_id)
-                                            })
+                                            },
+                                        headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
 
             return None
@@ -329,7 +343,7 @@ async def get_platforms():
 
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
-            response = await client.post("/message_service/get_platforms",)
+            response = await client.post("/message_service/get_platforms",headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
 
             return response.json()

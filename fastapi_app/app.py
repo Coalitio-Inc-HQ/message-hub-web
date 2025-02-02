@@ -34,7 +34,7 @@ import uuid
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.include_router(internal_router)
+    if not config.API_KEY: app.include_router(internal_router)
     app.include_router(webhooks_router, tags=["webhook"])
 
     fastapi_users = FastAPIUsers[User, int](
@@ -64,8 +64,10 @@ async def lifespan(app: FastAPI):
     yield
     logger.debug("Приложение успешно остановлено")
 
-
-app = FastAPI(lifespan=lifespan)
+if not config.API_KEY:
+    app = FastAPI(lifespan=lifespan)
+else:
+    app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None)
 
 app.add_middleware(
     CORSMiddleware,

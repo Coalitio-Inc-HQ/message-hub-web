@@ -11,4 +11,4 @@ async def init_models():
         await conn.run_sync(Base.metadata.create_all)
 
         if not (await conn.execute(select(AdminUser).where(AdminUser.login=="admin"))).one_or_none():
-            await conn.execute(insert(AdminUser).values(login="admin", hashed_password=pwd_context.hash("admin")))
+            await conn.execute(insert(AdminUser).values(login="admin", hashed_password=pwd_context.hash("adminA1234567!")))

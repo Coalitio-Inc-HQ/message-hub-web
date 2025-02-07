@@ -355,3 +355,31 @@ async def get_platforms():
         except Exception as e:
             print(f"Error: {e}")
             raise e
+
+
+
+@internal_router.post("/delete_message", response_model=None)
+async def delete_message(user_id:int, message_id: int, event_id: uuid.UUID):
+    """
+    Получает существующие платформы.
+    """
+
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/delete_a_message_from_chat",headers={"API-KEY": config.OUT_API_KEY},
+                                         json={
+                                             "user_id":user_id,
+                                             "message_id":message_id,
+                                             "event_id":str(event_id)
+                                         })
+            response.raise_for_status()
+
+            return response.json()
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e

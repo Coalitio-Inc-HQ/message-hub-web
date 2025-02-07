@@ -12,6 +12,7 @@ def get_websocket_event_handlers():
     return {
         "chat.update":handler_from_main_chat_update,
         "chat.new_message": handler_from_main_new_message_in_chat,
+        "chat.delete_message": handler_from_main_delete_message,
         "chat.add.user": handler_from_main_new_user_in_chat,
         "chat.set.last_read_message_id": handler_from_main_set_last_read_message_id,
     }
@@ -37,6 +38,20 @@ async def handler_from_main_new_message_in_chat(event: Event):
     action = ActionDTO(
         id=uuid.uuid4(),
         name="chat.new_message",
+        body={
+            "message": message.model_dump(),
+            "event_id": str(event.id),
+        })
+    await websocket_manager.broadcast(action)
+
+async def handler_from_main_delete_message(event: Event):
+    """
+    Отдача информации о удалении собщения
+    """
+    message = MessageDTO.model_validate(event.data["message"])
+    action = ActionDTO(
+        id=uuid.uuid4(),
+        name="chat.delete_message",
         body={
             "message": message.model_dump(),
             "event_id": str(event.id),

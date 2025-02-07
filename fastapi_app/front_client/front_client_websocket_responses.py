@@ -8,7 +8,7 @@ from fastapi_app.main_client.main_client_requests import get_chats_by_user
 from fastapi_app.main_client.main_client_requests import get_users_by_chat
 from fastapi_app.main_client.main_client_requests import get_messages_by_chat
 from fastapi_app.main_client.main_client_requests import add_user_to_chat
-from fastapi_app.main_client.main_client_requests import send_a_message_to_chat, remove_to_archive, set_last_read_message_id, get_platforms
+from fastapi_app.main_client.main_client_requests import send_a_message_to_chat, remove_to_archive, set_last_read_message_id, get_platforms, delete_message
 from fastapi_app.utils import check_body_format, error_catcher
 
 from fastapi_app.websocket_manager import websocket_manager
@@ -35,6 +35,7 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
         remove_to_archive = answer_remove_to_archive,
         set_last_read_message_id = answer_set_last_read_message_id,
         get_platforms = answer_front_get_platforms,
+        delete_message = answer_front_delete_message,
     )
 
 @error_catcher("get_user_info")
@@ -328,7 +329,7 @@ async def answer_set_last_read_message_id (id: uuid.UUID, body: dict, websocket:
     )
     await websocket_manager.send_personal_response(action, websocket)
 
-@error_catcher("answer_front_get_platforms")
+@error_catcher("get_platforms")
 @check_body_format([])
 async def answer_front_get_platforms (id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
     """
@@ -347,6 +348,35 @@ async def answer_front_get_platforms (id: uuid.UUID, body: dict, websocket: WebS
         name="get_platforms",
         body={
             "platforms": platforms,
+        },
+        status_code=200,
+        error=None
+    )
+    await websocket_manager.send_personal_response(action, websocket)
+
+
+@error_catcher("delete_message")
+@check_body_format(["message_id","event_id"])
+async def answer_front_delete_message (id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
+    """
+    Ответ на запрос удаления сообщения.
+
+    :param body: Dict[]
+    :param websocket: Websocket
+    :param user: User
+    :return:
+    """
+    message_id = int(body.get('message_id'))
+    event_id = uuid.UUID(body.get('event_id'))
+
+    platforms = await delete_message(user.id, message_id, event_id)
+
+    action = ActionDTOOut(
+        id=id,
+        name="delete_message",
+        body={
+            "message_id":message_id,
+            "event_id": event_id,
         },
         status_code=200,
         error=None

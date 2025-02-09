@@ -27,6 +27,8 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
+    is_completed_tutorial: Mapped[bool] = mapped_column(Boolean, default=False)
+
 
 class AdminUser(Base):
     __tablename__ = "admin_user"

@@ -116,6 +116,7 @@ class UserInfoDTO(BaseModel):
     """
     name: str
     id: int
+    is_completed_tutorial: bool
 
 class Event(BaseModel):
     """

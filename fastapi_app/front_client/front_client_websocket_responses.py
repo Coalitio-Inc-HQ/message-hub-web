@@ -16,6 +16,8 @@ from fastapi_app.websocket_manager import websocket_manager
 from core import MessageDTO, ActionsMapTypedDict, UserInfoDTO, ActionDTOOut,MessageDTOFront
 
 from database.database_schemes import User
+from database.database_engine import session_factory
+from sqlalchemy import update
 
 import uuid
 
@@ -25,6 +27,7 @@ logger = logging.getLogger(__name__)
 def get_websocket_response_actions() -> ActionsMapTypedDict:
     return ActionsMapTypedDict(
         get_user_info=answer_front_user_info,
+        set_is_completed_tutorial=answer_front_set_is_completed_tutorial,
         # get_chats_in_which_user_is_not_member=answer_front_get_chats_in_which_user_is_not_member,
         get_chats_by_user=answer_front_chats_by_user,
         get_users_by_chat=answer_front_users_by_chat,
@@ -61,6 +64,36 @@ async def answer_front_user_info(id: uuid.UUID, body: dict, websocket: WebSocket
     # await websocket.send_json(action.model_dump())
     await websocket_manager.send_personal_response(action, websocket)
 
+
+@error_catcher("is_completed_tutorial")
+@check_body_format([])
+async def answer_front_set_is_completed_tutorial(id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
+    """
+    Ответ на запрос об установлении флага прохождения руководства пользователя.
+
+    :param body: Dict[]
+    :param websocket: Websocket
+    :param user: User
+    :return:
+    """
+
+    is_completed_tutorial = bool(body.get('is_completed_tutorial'))
+
+    async with session_factory() as conn:
+        await conn.execute(update(User).where(User.id==user.id).values(is_completed_tutorial=is_completed_tutorial))
+        await conn.commit()
+
+    action = ActionDTOOut(
+        id=id,
+        name="is_completed_tutorial",
+        body={
+            
+        },
+        status_code=200,
+        error=None
+    )
+    # await websocket.send_json(action.model_dump())
+    await websocket_manager.send_personal_response(action, websocket)
 
 # @error_catcher("get_chats_in_which_user_is_not_member")
 # @check_body_format([])

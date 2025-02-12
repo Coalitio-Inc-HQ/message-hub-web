@@ -21,6 +21,8 @@ from sqlalchemy import update
 
 import uuid
 
+from fastapi_app.event_buffer import get_event_after_event_id
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,6 +41,7 @@ def get_websocket_response_actions() -> ActionsMapTypedDict:
         set_last_read_message_id = answer_set_last_read_message_id,
         get_platforms = answer_front_get_platforms,
         delete_message = answer_front_delete_message,
+        get_buffer_messages = answer_front_get_buffer_messages,
     )
 
 @error_catcher("get_user_info")
@@ -409,6 +412,34 @@ async def answer_front_delete_message (id: uuid.UUID, body: dict, websocket: Web
         name="delete_message",
         body={
             "message_id":message_id,
+            "event_id": event_id,
+        },
+        status_code=200,
+        error=None
+    )
+    await websocket_manager.send_personal_response(action, websocket)
+
+
+
+@error_catcher("get_buffer_messages")
+@check_body_format(["event_id"])
+async def answer_front_get_buffer_messages (id: uuid.UUID, body: dict, websocket: WebSocket | None, user: User):
+    """
+    Ответ на запрос получения последних событий.
+
+    :param body: Dict[]
+    :param websocket: Websocket
+    :param user: User
+    :return:
+    """
+    event_id = body.get('event_id')
+
+
+    action = ActionDTOOut(
+        id=id,
+        name="get_buffer_messages",
+        body={
+            "events":get_event_after_event_id(event_id),
             "event_id": event_id,
         },
         status_code=200,

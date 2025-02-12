@@ -3,6 +3,8 @@ import logging
 from core import ActionDTO, MessageDTO, ChatDTO, UserDTO, Event
 from fastapi_app.websocket_manager import websocket_manager
 
+from fastapi_app.event_buffer import push
+
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -28,6 +30,7 @@ async def handler_from_main_chat_update(event: Event):
             "chat": event.data["chat"],
             "event_id": str(event.id),
         })
+    push(action)
     await websocket_manager.broadcast(action)
 
 async def handler_from_main_new_message_in_chat(event: Event):
@@ -42,6 +45,7 @@ async def handler_from_main_new_message_in_chat(event: Event):
             "message": message.model_dump(),
             "event_id": str(event.id),
         })
+    push(action)
     await websocket_manager.broadcast(action)
 
 async def handler_from_main_delete_message(event: Event):
@@ -56,6 +60,7 @@ async def handler_from_main_delete_message(event: Event):
             "message": message.model_dump(),
             "event_id": str(event.id),
         })
+    push(action)
     await websocket_manager.broadcast(action)
 
 async def handler_from_main_new_user_in_chat(event: Event):
@@ -73,6 +78,7 @@ async def handler_from_main_new_user_in_chat(event: Event):
             'user': user.model_dump(),
             "event_id": str(event.id),
         })
+    push(action)
     await websocket_manager.broadcast(action)
 
 async def handler_from_main_set_last_read_message_id(event: Event):
@@ -89,6 +95,7 @@ async def handler_from_main_set_last_read_message_id(event: Event):
             "count": event.data["count"],
             "event_id": str(event.id),
         })
+    push(action)
     await websocket_manager.send_to_user_by_user_id(action, event.data["user_id"])
 
 

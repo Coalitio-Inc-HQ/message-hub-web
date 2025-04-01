@@ -1,17 +1,29 @@
 from collections import deque
-from core import ActionDTO
+from core.schemes import ActionEventDTO, EventDTO
 
 EVENT_BUFFER_SIZE = 200
 event_buffer = deque(maxlen=EVENT_BUFFER_SIZE)
+last_event_id = None
 
-def push(message: ActionDTO):
+def push(event: ActionEventDTO):
     """Добовляет событие в очередь"""
-    event_buffer.append(message)
+    last_event_id = event.obj.event_id
+    event_buffer.append(event)
 
-def get_event_after_event_id(event_id: str):
+def get_event_after_event_id(event_id):
     """Возвращает список событий, которые идут после события с указанным event_id."""
     for i, event in enumerate(event_buffer):
-        if getattr(event, "event_id", None) == event_id:
-            return list(event_buffer)[i + 1:]
+        if event.obj.event_id == event_id:
+            return {
+                "events": list(event_buffer)[i + 1:],
+                "find_event": True,
+            }
 
-    return []
+    return {
+                "events": [],
+                "find_event": False,
+            }
+
+def get_last_event_id():
+    """Возращяет id последнего известного события серверу"""
+    return last_event_id

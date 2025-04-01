@@ -52,11 +52,11 @@ async def register_platform(url: str = app_config.INTERNAL_BASE_DOMAIN):
 
 
 @internal_router.post('/register_user')
-async def register_user(name: str, platform_name: str = "web") -> dict:
+async def register_user(name: str, icon_url: str | None, platform_name: str = "web") -> dict:
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
         try:
             response = await client.post("/message_service/user_registration/web",
-                                         json={"platform_name": platform_name, "name": name},
+                                         json={"platform_name": platform_name, "name": name, "icon_url": icon_url},
                                          headers={"API-KEY": config.OUT_API_KEY})
             response.raise_for_status()
             return response.json()

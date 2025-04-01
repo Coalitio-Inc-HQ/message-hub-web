@@ -1,6 +1,6 @@
 from fastapi import WebSocket
-from core import ActionDTO, ActionDTOOut
-
+from core import ActionDTO
+from core import logger
 
 class ConnectionManager:
     """
@@ -14,7 +14,7 @@ class ConnectionManager:
         self.active_chat_connections: dict[set[int]] = {}
 
     async def connect(self, websocket: WebSocket, user_id: int):
-        await websocket.accept()
+        # await websocket.accept()
         if user_id in self.active_connections:
             self.active_connections[user_id].append(websocket)
         else:
@@ -68,7 +68,7 @@ class ConnectionManager:
         await websocket.send_text(message)
 
     @staticmethod
-    async def send_personal_response(action: ActionDTOOut, websocket: WebSocket):
+    async def send_personal_response(action: ActionDTO, websocket: WebSocket):
         await websocket.send_json(action.model_dump(mode="json"))
 
     async def broadcast(self, action: ActionDTO):
@@ -110,6 +110,9 @@ class ConnectionManager:
         """
         if user_id in self.active_connections:
             for connection in self.active_connections[user_id]:
-                await connection.send_json(action.model_dump(mode="json"))
+                try:
+                    await connection.send_json(action.model_dump(mode="json"))
+                except Exception as err:
+                    logger.error(f"Ошибка отправки сообщения пользователю {user_id}", err)
 
 websocket_manager = ConnectionManager()

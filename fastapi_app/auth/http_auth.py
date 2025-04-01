@@ -1,27 +1,34 @@
 import logging
 
-from fastapi_app.auth.user_manager import get_user_manager
-from fastapi_app.auth.auth import get_jwt_strategy
-from fastapi import WebSocket, Depends, HTTPException
-from database.database_schemes import User
+from fastapi import Depends, HTTPException, Body
+
+from fastapi_app.auth.utilities import chek_jwt, chek_jwt_and_get_user
+from database.database_engine import AsyncSession, get_session
+from fastapi_app.auth.auth_schemes import *
+
+from typing import Any
 
 logger = logging.getLogger()
 
-async def http_auth_base(token: str, user_manager=Depends(get_user_manager)):
+async def http_auth_verify_jwt(token: str = Body(), db_session: AsyncSession=Depends(get_session))-> Any:
     try:
-        user = await (get_jwt_strategy().read_token(token, user_manager))
+        return chek_jwt(token)
     except:
         raise HTTPException(status_code=401)
-    # User is authenticated, you can also check if he is active
-    if user and user.is_active:
-        return user
-
-    # The credentials are invalid, expired, or the user does not exist or inactive
-    raise HTTPException(status_code=401)
-    # return None
 
 
-async def http_auth_active(user: User = Depends(http_auth_base)):
+async def http_auth_base(token: str = Body(), db_session: AsyncSession=Depends(get_session)) -> ExtUserDTO:
+    try: 
+        user = await chek_jwt_and_get_user(token, db_session)
+        if user:
+            return user
+        else:
+            raise HTTPException(status_code=401)
+    except:
+        raise HTTPException(status_code=401)
+
+
+async def http_auth_active(user: ExtUserDTO = Depends(http_auth_base)) -> ExtUserDTO:
     if not user.is_active:
         raise HTTPException(status_code=401)
     else:

@@ -4,7 +4,7 @@ from typing import Callable, TypedDict, List
 from fastapi import WebSocket
 
 from pydantic import BaseModel, Field
-from typing import  Any
+from typing import  Any, Literal
 
 import uuid
 
@@ -36,21 +36,43 @@ class ActionDTO(BaseModel):
 
     Формат: {name: str, {...тело}}
     """
-    name: name
-    body: dict
     id: uuid.UUID
+    type: Literal["Request", "Response", "Event"]
+    obj: Any
 
+class RequestDTO(BaseModel):
+    name: str
+    body: Any
 
-class ActionDTOOut(ActionDTO):
-    """
-    Экземпляр действия, совершаемого при взаимодействии
-    с приложением через вебсокет
+class ActionRequestDTO(ActionDTO):
+    type: Literal["Request"] = "Request"
+    obj: RequestDTO
 
-    Формат: {name: str, {...тело}}
-    """
+class ResponseDTO(BaseModel):
+    name: str
     status_code: int
-    error: ErrorDTO | None
+    body: Any
+    error: None | Any
+    permisions: None | Any = None
 
+class ActionResponseDTO(ActionDTO):
+    type: Literal["Response"] = "Response"
+    obj: ResponseDTO
+
+class EventDTO(BaseModel):
+    event_id: uuid.UUID
+    name: str
+    body: Any
+
+class ActionEventDTO(ActionDTO):
+    type: Literal["Event"] = "Event"
+    obj: EventDTO
+
+action_dto_map = {
+    "Request": ActionRequestDTO.model_validate,
+    "Response": ActionResponseDTO.model_validate,
+    "Event": ActionEventDTO.model_validate,
+}
 
 class ChatDTO(BaseModel):
     """
@@ -97,17 +119,6 @@ class UserDTO(BaseModel):
 class ChatUsersDTO(BaseModel):
     user_id: int
     chat_id: int
-
-
-class ActionsMapTypedDict(TypedDict):
-    get_user_info: Callable[[], None] | None
-    get_chats_in_which_user_is_not_member: Callable[[count], List[ChatDTO]] | None
-    read_chat_by_user: Callable[[user_id, chat_id], ChatDTO] | None
-    get_chats_by_user: Callable[[user_id], List[ChatDTO]] | None
-    get_users_by_chat: Callable[[chat_id], List[UserDTO]] | None
-    get_messages_by_chat: Callable[[chat_id, count], List[MessageDTO]] | None
-    add_user_to_chat: Callable[[chat_id, user_id], ChatDTO] | None
-    send_message_to_chat: Callable[[MessageDTO], None] | None
 
 
 class UserInfoDTO(BaseModel):

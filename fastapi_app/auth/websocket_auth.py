@@ -1,33 +1,38 @@
 import logging
 
-from fastapi_app.auth.user_manager import get_user_manager
-from fastapi_app.auth.auth import get_jwt_strategy
-from fastapi import WebSocket, Depends, HTTPException
-from database.database_schemes import User
+from fastapi import WebSocket, HTTPException
+
+from fastapi_app.auth.utilities import chek_jwt, chek_jwt_and_get_user
+from database.database_engine import AsyncSession, get_session
+from fastapi_app.auth.auth_schemes import *
+
+from typing import Any
 
 logger = logging.getLogger()
 
-async def websocket_auth_base(websocket: WebSocket,token: str, user_manager=Depends(get_user_manager)):
+async def websocket_auth_verify_jwt(websocket: WebSocket, token: str, db_session: AsyncSession) -> Any:
     try:
-        user = await (get_jwt_strategy().read_token(token, user_manager))
+        return chek_jwt(token)
     except:
-        await websocket.accept()
-        await websocket.close(code=1008, reason="Ошибка аутентификации1")
+        await websocket.close(code=1008, reason="Ошибка аутентификации")
         raise HTTPException(status_code=401)
-    # User is authenticated, you can also check if he is active
-    if user and user.is_active:
-        return user
-
-    # The credentials are invalid, expired, or the user does not exist or inactive
-    await websocket.accept()
-    await websocket.close(code=1008, reason="Ошибка аутентификации2")
-    raise HTTPException(status_code=401)
-    # return None
 
 
-async def websocket_auth_active(websocket: WebSocket, user: User = Depends(websocket_auth_base)):
+async def websocket_auth_base(websocket: WebSocket, token: str, db_session: AsyncSession) -> ExtUserDTO:
+    try: 
+        user = await chek_jwt_and_get_user(token, db_session)
+        if user:
+            return user
+        else:
+            raise Exception()
+    except:
+        await websocket.close(code=1008, reason="Пользователь не активен")
+        raise HTTPException(status_code=401)
+
+
+async def websocket_auth_active(websocket: WebSocket, token: str, db_session: AsyncSession) -> ExtUserDTO:
+    user = await websocket_auth_base(token, db_session)
     if not user.is_active:
-        await websocket.accept()
         await websocket.close(code=1008, reason="Пользователь не активен")
         raise HTTPException(status_code=401)
     else:

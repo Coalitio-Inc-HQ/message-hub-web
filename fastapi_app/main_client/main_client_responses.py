@@ -3,14 +3,14 @@ import logging
 from fastapi import APIRouter, Depends
 
 from core import app_config, MessageDTO, ChatDTO, UserDTO, Event
-from fastapi_app.front_client.front_client_websocket_requests import trigger_front_new_message_in_chat, \
-    trigger_front_new_user_in_chat, trigger_front_new_chat, trigger_front_new_message_in_chat_personal
+# from fastapi_app.front_client.front_client_websocket_requests import trigger_front_new_message_in_chat, \
+#     trigger_front_new_user_in_chat, trigger_front_new_chat, trigger_front_new_message_in_chat_personal
 
 from  fastapi_app.front_client.front_client_websocket_requests import get_websocket_event_handlers
 
 webhooks_router = APIRouter(prefix=app_config.INTERNAL_GET_MESSAGE_PREFIX)
 
-from core.auth import verify_api_key
+from core.cross_server_auth import verify_api_key
 
 logger = logging.getLogger(__name__)
 

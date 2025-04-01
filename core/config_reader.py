@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     INTERNAL_UPLOAD_FILE_PREFIX:str
 
     SECRET_AUTH: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    ACCESS_CHENGE_PASSWORD_TOKEN_EXPIRE_MINUTES: int
+    CACHE_USER_MINUTES: int
 
     EXTERNAL_MAIN_BASE_URL: str
 
@@ -40,6 +43,12 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY_ID: str
     S3_SECRET_ACCESS_KEY: str
     S3_BUCKET_NAME: str
+
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_USERNAME: str
+    REDIS_PASSWORD: str
+    REDIS_USE_SSL: bool
 
     API_KEY: str | None
     OUT_API_KEY: str | None

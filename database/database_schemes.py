@@ -35,3 +35,5 @@ class RoleORM(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str_256] = mapped_column(CheckConstraint("name != ''"))
     permissions: Mapped[Any] = mapped_column(JSON)
+
+    is_hide: Mapped[bool]

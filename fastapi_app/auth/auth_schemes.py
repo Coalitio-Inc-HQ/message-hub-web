@@ -14,7 +14,7 @@ class UserCreateDTO(BaseModel):
 
     icon_url: str | None = Field(max_length=256)
 
-    role_id: int
+    role_id: int | None
 
 class UserDTO(BaseModel):
     id: int
@@ -85,6 +85,8 @@ class RoleDTO(BaseModel):
     id: int
     name: str = Field(max_length=256, pattern=".$")
     permissions: Any
+
+    is_hide: bool
 
 class RoleUpdateDTO(BaseModel):
     id: int

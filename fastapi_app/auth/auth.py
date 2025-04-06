@@ -6,7 +6,7 @@ from sqlalchemy import select
 from fastapi_app.auth.auth_schemes import *
 
 from database.database_engine import get_session, AsyncSession
-from database.utilities import insert_data, select_data_one_or_none_quer, select_data_arr, update_data
+from database.utilities import insert_data, select_data_one_or_none_quer, select_data_arr, update_data, select_data_one_or_none
 
 from fastapi import APIRouter, Depends, HTTPException, Body, Response
 
@@ -59,14 +59,14 @@ async def login_user(response: Response, email: str = Body(), password: str = Bo
 
 
 @user_router.post(path="/create")
-async def register_user(register_info: UserCreateDTO, db_session: AsyncSession=Depends(get_session), user: ExtUserDTO = Depends(http_auth_active)):
+async def create_user(register_info: UserCreateDTO, db_session: AsyncSession=Depends(get_session), user: ExtUserDTO = Depends(http_auth_active)):
     """
     Создаёт нового пользователя
     """
     if not chek_permission("user.create", user):
-        raise HTTPException(403)
+        raise HTTPException(403, user.model_dump())
 
-    main_register = await register_user(register_info.name, icon_url=register_info.icon_url)
+    main_register = await register_user(register_info.name, register_info.icon_url)
 
     res = await insert_data(db_session, UserORM,
                     data={
@@ -83,7 +83,19 @@ async def register_user(register_info: UserCreateDTO, db_session: AsyncSession=D
                         },
                     )
     
-    return {"id": main_register["user_id"]}
+    return OutExtUserDTO.model_validate(
+        {
+            "id": main_register["user_id"],
+            "name":register_info.name,
+            "email":register_info.email,
+            "is_active": True,
+            "is_root": False,
+            "icon_url": register_info.icon_url,
+            "role_id": register_info.role_id,
+            # "is_completed_tutorial": False,
+            "settings": {}
+            },
+        )
 
 
 @user_router.post(path="/info")
@@ -95,15 +107,15 @@ async def user_info(temp: str = Body(default=None), db_session: AsyncSession=Dep
 
 
 @user_router.post(path="/list")
-async def list_user(db_session: AsyncSession=Depends(get_session), user: ExtUserDTO = Depends(http_auth_active)):
+async def list_user(temp: str = Body(default=None), db_session: AsyncSession=Depends(get_session), user: ExtUserDTO = Depends(http_auth_active)):
     """
     Получает пользователей
     """
     if not chek_permission("user.list", user):
-        raise HTTPException(403)
+        raise HTTPException(403, user.model_dump())
 
 
-    return select_data_arr(db_session, UserORM, OutExtUserDTO)
+    return await select_data_arr(db_session, UserORM, OutExtUserDTO)
 
 
 self_update_filds = {"name", "email", "password", "icon_url", "settings"} # Перечень полей разрещённых для обновления пользователем самому себе.
@@ -136,7 +148,7 @@ async def update_user(update_user: UserUpdateDTO, db_session: AsyncSession=Depen
 
         return {"status":"ok"}
     else:
-        raise HTTPException(403)
+        raise HTTPException(403, user.model_dump())
 
 
 @user_router.post(path="/settings/set")
@@ -158,7 +170,7 @@ async def init_chenge_password_user(user_id: int = Body(), temp: str = Body(defa
     Иницирует смену пароля пользователя по сслке.
     """
     if not chek_permission("user.password.chenge.init", user):
-        raise HTTPException(403)
+        raise HTTPException(403, user.model_dump())
 
     last_token = await redis.get(f"password.chenge.init.{user_id}")
 
@@ -190,28 +202,30 @@ async def create_role(role: RoleCreateDTO = Body(), db_session: AsyncSession=Dep
     Создаёт роль
     """
     if not chek_permission("role.create", user):
-        raise HTTPException(403)
+        raise HTTPException(403, user.model_dump())
 
-    res = await insert_data(db_session, RoleDTO,
+    res = await insert_data(db_session, RoleORM,
                 data={
                     "name":role.name,
                     "permissions":role.permissions,
-                    "is_system": False,
+                    "is_hide": False,
                     },
                     return_atr=["id"]
                 )
-    return RoleDTO(id=res["id"], name=role.name, permissions=role.permissions)
+    return RoleDTO(id=res["id"], name=role.name, permissions=role.permissions, is_hide=False)
 
 
 @role_router.post(path="/list")
-async def create_role(db_session: AsyncSession=Depends(get_session), user: ExtUserDTO = Depends(http_auth_active)):
+async def create_role(temp: str = Body(default=None), db_session: AsyncSession=Depends(get_session), user: ExtUserDTO = Depends(http_auth_active)):
     """
     Получает список ролей
     """
     if not chek_permission("role.list", user):
-        raise HTTPException(403)
+        raise HTTPException(403, user.model_dump())
 
-    return select_data_arr(db_session, RoleORM, RoleDTO)
+    res = await select_data_arr(db_session, RoleORM, RoleDTO, RoleORM.is_hide==False)
+
+    return res
 
 
 @role_router.post(path="/update")
@@ -220,18 +234,39 @@ async def update_role(update_role: RoleUpdateDTO, db_session: AsyncSession=Depen
     Обновляет роль.
     """
     if not chek_permission("role.update", user):
-        raise HTTPException(403)
+        raise HTTPException(403, user.model_dump())
 
     updated_filds = get_update_fields(update_role)
     updated_filds.pop("id")
 
-    await update_data(db_session, RoleORM, RoleORM.id == update_user.id, **updated_filds)
+    await update_data(db_session, RoleORM, RoleORM.id == update_role.id, **updated_filds)
 
     # Реакция на обновление роли
     await delete_user_cache_by_role_id(update_role.id)
     #
 
-    return {"status":"ok"}
+    return await select_data_one_or_none(db_session, RoleORM, RoleDTO, RoleORM.id == update_role.id)
+
+@role_router.post(path="/delete")
+async def delete_role(role_ids: list[int], db_session: AsyncSession=Depends(get_session), user: ExtUserDTO = Depends(http_auth_active)):
+    """
+    Удаляет роли.
+    """
+    if not chek_permission("role.delete", user):
+        raise HTTPException(403, user.model_dump())
+    
+    users = await select_data_arr(db_session, UserORM, UserDTO, UserORM.role_id.in_(role_ids), UserORM.is_active==True)
+
+    find_roles = set()
+    for us in users:
+        find_roles.add(us.role_id)
+    
+    if find_roles:
+        raise HTTPException(422, {"fail_delete_roles": list(find_roles)})
+    
+    await update_data(db_session, RoleORM, RoleORM.id.in_(role_ids), **{"is_hide":True})
+
+    return {"status": "ok"}
 
 router.include_router(user_router, prefix="/user")
 router.include_router(role_router, prefix="/role")

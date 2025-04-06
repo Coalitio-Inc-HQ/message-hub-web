@@ -1,2 +1,2 @@
 user default on nopass ~* &* -@all
-user TestUserName on >TestPassword ~* +get +set +del
+user TestUserName on >TestPassword ~* +get +set +del +scan

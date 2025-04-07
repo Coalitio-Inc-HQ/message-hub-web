@@ -33,15 +33,15 @@ class UserDTO(BaseModel):
 
 class UserUpdateDTO(BaseModel):
     id: int
-    name: str | NullUpdate = Field(max_length=256, pattern=".$", default = NullUpdate())
-    email: str | NullUpdate = Field(max_length=256, pattern=r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', default = NullUpdate())
-    password: str | NullUpdate = Field(max_length=256, pattern="........$", default = NullUpdate())
-    is_active: bool | NullUpdate  = NullUpdate()
-    is_root: bool | NullUpdate  = NullUpdate()
+    name: str = Field(max_length=256, pattern=".$", default = NullUpdate)
+    email: str = Field(max_length=256, pattern=r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', default = NullUpdate)
+    password: str = Field(max_length=256, pattern="........$", default = NullUpdate)
+    is_active: bool  = NullUpdate
+    is_root: bool  = NullUpdate
 
-    icon_url: str | None | NullUpdate = Field(max_length=256, default=NullUpdate())
+    icon_url: str | None = Field(max_length=256, default=NullUpdate)
 
-    role_id: int | None | NullUpdate  = NullUpdate()
+    role_id: int | None  = NullUpdate
 
 
 class ExtUserDTO(BaseModel):
@@ -90,5 +90,5 @@ class RoleDTO(BaseModel):
 
 class RoleUpdateDTO(BaseModel):
     id: int
-    name: str | NullUpdate = Field(max_length=256, pattern=".$", default=NullUpdate())
-    permissions: Any | NullUpdate = NullUpdate()
+    name: str = Field(max_length=256, pattern=".$", default=NullUpdate)
+    permissions: Any = NullUpdate

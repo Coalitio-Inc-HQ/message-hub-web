@@ -19,7 +19,7 @@ from core.config_reader import config
 from datetime import timezone 
 import datetime 
 
-from fastapi_app.auth.utilities import chek_permission, get_update_fields, set_user_cache, delete_user_cache_by_role_id
+from fastapi_app.auth.utilities import chek_permission, get_update_fields, set_user_cache, delete_user_cache_by_role_id, delete_user_cache
 from fastapi_app.auth.http_auth import http_auth_active
 
 from core.redis import redis
@@ -115,7 +115,7 @@ async def list_user(temp: str = Body(default=None), db_session: AsyncSession=Dep
         raise HTTPException(403, user.model_dump())
 
 
-    return await select_data_arr(db_session, UserORM, OutExtUserDTO)
+    return await select_data_arr(db_session, UserORM, OutExtUserDTO, UserORM.is_active==True)
 
 
 self_update_filds = {"name", "email", "password", "icon_url", "settings"} # Перечень полей разрещённых для обновления пользователем самому себе.
@@ -142,13 +142,36 @@ async def update_user(update_user: UserUpdateDTO, db_session: AsyncSession=Depen
         # Реакция на обновление пользователя
         new_user = await select_data_one_or_none_quer(db_session, ExtUserDTO, 
             select(UserORM, RoleORM.id.label("role_id"), RoleORM.name.label("role_name"), RoleORM.permissions.label("role_permissions")).join(RoleORM, isouter=True)
-            .where(UserORM.id == user.id))
+            .where(UserORM.id == update_user.id))
         await set_user_cache(new_user)
         #
 
-        return {"status":"ok"}
+        return OutExtUserDTO.model_validate(new_user, from_attributes=True)
     else:
         raise HTTPException(403, user.model_dump())
+
+
+@user_router.post(path="/delete")
+async def delete_user(user_ids: list[int], db_session: AsyncSession=Depends(get_session), user: ExtUserDTO = Depends(http_auth_active)):
+    """
+    Удаляет роли.
+    """
+    if not chek_permission("user.delete", user):
+        raise HTTPException(403, user.model_dump())
+    
+
+    users = await select_data_arr(db_session, UserORM, UserDTO, UserORM.id.in_(user_ids), UserORM.is_root==True)
+    
+    if users:
+        raise HTTPException(422, {"fail_delete_users": True})
+
+    await update_data(db_session, UserORM, UserORM.id.in_(user_ids), **{"is_active":False})
+
+    # 
+    await delete_user_cache(user_ids)
+    # 
+
+    return {"status": "ok"}
 
 
 @user_router.post(path="/settings/set")

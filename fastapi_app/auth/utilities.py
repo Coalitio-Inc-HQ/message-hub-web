@@ -86,7 +86,7 @@ def get_update_fields(object: BaseModel) -> dict:
     """
     res = {}
     for key, value in object.model_dump().items():
-        if not isinstance(value, NullUpdate):
+        if not value == NullUpdate:
             res[key]=value
     return res
 
@@ -124,3 +124,11 @@ async def delete_user_cache_by_role_id(role_id: int):
         if cursor == 0:
             break
     
+
+async def delete_user_cache(user_ids: list[int]):
+    """
+    Удаляет пользователей из кеша по их ID.
+    :param user_ids: Список ID пользователей для удаления.
+    """
+    keys_to_delete = [f"user_{user_id}" for user_id in user_ids]
+    await redis.delete(*keys_to_delete)

@@ -214,7 +214,22 @@ async def init_chenge_password_user(user_id: int = Body(), token: str = Body(), 
     if rdis_token==token:
         await update_data(db_session, UserORM, UserORM.id == user_id, hashed_password = pwd_context.hash(password))
         await redis.delete(f"password.chenge.init.{user_id}")
-        return {"status": "ok"}
+
+        user: ExtUserDTO =  await select_data_one_or_none_quer(db_session, ExtUserDTO, 
+            select(UserORM, RoleORM.id.label("role_id"), RoleORM.name.label("role_name"), RoleORM.permissions.label("role_permissions")).join(RoleORM, isouter=True)
+            .where(UserORM.id == user_id))
+        await set_user_cache(user)
+        return {
+                "jwt": jwt.encode(
+                        {
+                            "user_id": user.id, 
+                            "exp": (datetime.datetime.now(timezone.utc) + datetime.timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)).timestamp()
+                        },
+                        key=config.SECRET_AUTH,
+                        algorithm="HS256",
+                    ),
+                "userInfo": user,
+            }
     else:
         raise HTTPException(401)
 

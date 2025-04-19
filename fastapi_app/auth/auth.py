@@ -10,7 +10,7 @@ from database.utilities import insert_data, select_data_one_or_none_quer, select
 
 from fastapi import APIRouter, Depends, HTTPException, Body, Response
 
-from fastapi_app.main_client.main_client_requests import register_user
+from fastapi_app.main_client.main_client_requests import register_user, update_user as update_user_mh
 
 from passlib.context import CryptContext
 
@@ -118,6 +118,7 @@ async def list_user(temp: str = Body(default=None), db_session: AsyncSession=Dep
     return await select_data_arr(db_session, UserORM, OutExtUserDTO, UserORM.is_active==True)
 
 
+mh_feilds = ["name", "icon_url"]
 self_update_filds = {"name", "email", "password", "icon_url", "settings"} # Перечень полей разрещённых для обновления пользователем самому себе.
 @user_router.post(path="/update")
 async def update_user(update_user: UserUpdateDTO, db_session: AsyncSession=Depends(get_session), user: ExtUserDTO = Depends(http_auth_active)):
@@ -137,6 +138,12 @@ async def update_user(update_user: UserUpdateDTO, db_session: AsyncSession=Depen
             can_self_update = False
 
     if can_self_update and update_user.id == user.id or chek_permission("user.update", user):
+        mh_update_dict = {"id": update_user.id}
+        for key in mh_feilds:
+            if key in updated_filds:
+                mh_update_dict[key] = updated_filds[key]
+        await update_user_mh(mh_update_dict)
+
         await update_data(db_session, UserORM, UserORM.id == update_user.id, **updated_filds)
 
         # Реакция на обновление пользователя

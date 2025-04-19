@@ -361,7 +361,7 @@ async def get_platforms():
 @internal_router.post("/delete_message", response_model=None)
 async def delete_message(user_id:int, message_id: int, event_id: uuid.UUID):
     """
-    Получает существующие платформы.
+    Удаляет сообщение.
     """
 
     async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
@@ -372,6 +372,29 @@ async def delete_message(user_id:int, message_id: int, event_id: uuid.UUID):
                                              "message_id":message_id,
                                              "event_id":str(event_id)
                                          })
+            response.raise_for_status()
+
+            return response.json()
+        except ValidationError:
+            raise WrongResponseFormatFromMainException("Пришел неверный формат данных с главного сервера")
+        except HTTPStatusError as e:
+            print(f"http Error: {e}")
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise e
+        
+
+@internal_router.post("/update_user", response_model=None)
+async def update_user(user: dict):
+    """
+    Обновляет сведения о пользователе.
+    """
+
+    async with AsyncClient(base_url=app_config.EXTERNAL_MAIN_BASE_URL) as client:
+        try:
+            response = await client.post("/message_service/update_user",headers={"API-KEY": config.OUT_API_KEY},
+                                         json=user)
             response.raise_for_status()
 
             return response.json()

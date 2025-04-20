@@ -119,7 +119,7 @@ async def list_user(temp: str = Body(default=None), db_session: AsyncSession=Dep
 
 
 mh_feilds = ["name", "icon_url"]
-self_update_filds = {"name", "email", "password", "icon_url", "settings"} # Перечень полей разрещённых для обновления пользователем самому себе.
+self_update_filds = {"name", "email", "hashed_password", "icon_url", "settings"} # Перечень полей разрещённых для обновления пользователем самому себе.
 @user_router.post(path="/update")
 async def update_user(update_user: UserUpdateDTO, db_session: AsyncSession=Depends(get_session), user: ExtUserDTO = Depends(http_auth_active)):
     """

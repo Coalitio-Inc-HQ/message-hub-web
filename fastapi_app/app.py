@@ -45,10 +45,10 @@ async def lifespan(app: FastAPI):
     )
 
     try:
-        await init_models()
-        logger.debug("База данных готова")
         await register_platform()
         logger.debug("Регистрация платформы прошла успешно")
+        await init_models()
+        logger.debug("База данных готова")
     except PlatformRegistrationException as e:
         logger.error(e)
     logger.debug("Приложение успешно запущено")
